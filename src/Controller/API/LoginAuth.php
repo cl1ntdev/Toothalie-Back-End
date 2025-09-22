@@ -20,6 +20,7 @@ class LoginAuth extends AbstractController {
         $query = "Select * where username = ? and password = ?";
         
         // sample data retrieve from database \\
+        $userID = 123;
         $usernameTest = "clint123";
         $firstName = "Clint";
         $lastName = "Estrellanes";
@@ -36,6 +37,7 @@ class LoginAuth extends AbstractController {
         // sample response from db
         return new JsonResponse([
                'status' => 'ok',
+               'userID' => $userID,
                'username' => $firstName,
                'lastname' => $lastName,
                'role' => $role,
