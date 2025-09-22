@@ -12,12 +12,27 @@ class LoginAuth extends AbstractController {
     #[Route('/api/login-auth',name:"login-auth",methods:['POST'])]
     public function doGetUser(Request $req):JsonResponse{
         
+        // Get password from user Input
         $userInput = json_decode($req->getContent(), true);
         $username = $userInput['username'];
         $password = $userInput['password'];
+
+        $query = "Select * where username = ? and password = ?";
+        
+        // sample data retrieve from database \\
+        $firstName = "Clint";
+        $lastName = "Estrellanes";
+        $role = "Patient";
+        $passwordTest = "admin";
+        // sample data retrieve from database \\
+        
+        
+        // sample response from db
         return new JsonResponse([
                'status' => 'ok',
-               'username' => $username,
+               'username' => $firstName,
+               'lastname' => $lastName,
+               'role' => $role,
                // never send password back in real life — just showing structure
         ]);    }
 }
