@@ -20,12 +20,18 @@ class LoginAuth extends AbstractController {
         $query = "Select * where username = ? and password = ?";
         
         // sample data retrieve from database \\
+        $usernameTest = "clint123";
         $firstName = "Clint";
         $lastName = "Estrellanes";
         $role = "Patient";
         $passwordTest = "admin";
         // sample data retrieve from database \\
         
+        if($username != $usernameTest || $password != $passwordTest){
+            return new JsonResponse([
+                'status'=>"username or password incorrect from symfony"
+            ]);
+        }
         
         // sample response from db
         return new JsonResponse([
