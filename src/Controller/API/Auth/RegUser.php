@@ -1,46 +1,40 @@
 <?php
 
-namespace App\Controller\API;
+namespace App\Controller\API\Auth;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class LoginAuth extends AbstractController {
+class RegUser extends AbstractController {
     
-    #[Route('/api/login-auth',name:"login-auth",methods:['POST'])]
+    #[Route('/api/reg-check-user',name:"reg-auth",methods:['POST'])]
     public function doGetUser(Request $req):JsonResponse{
         
-        // Get password from user Input
-        $userInput = json_decode($req->getContent(), true);
-        $username = $userInput['username'];
-        $password = $userInput['password'];
-
-        $query = "Select * where username = ? and password = ?";
+        $userInput = json_decode($req->getContent(),true);
+        $usernameInput = $userInput["username"];
         
         // sample data retrieve from database \\
-        $userID = 123;
-        $usernameTest = "clint123";
+        $username = "clint123";
         $firstName = "Clint";
         $lastName = "Estrellanes";
         $role = "Patient";
-        $passwordTest = "admin";
+        $passwordTest = "1234";
         // sample data retrieve from database \\
         
-        if($username != $usernameTest || $password != $passwordTest){
+        if($usernameInput == $username){
             return new JsonResponse([
-                'status'=>"username or password incorrect from symfony"
+                'status'=> "username already exist please choose another one"
             ]);
-        }
+        };
         
-        // sample response from db
         return new JsonResponse([
                'status' => 'ok',
-               'userID' => $userID,
                'username' => $firstName,
                'lastname' => $lastName,
-               'role' => $role,
+               'password' => $role,
                // never send password back in real life — just showing structure
-        ]);    }
+        ]);    
+    }
 }
