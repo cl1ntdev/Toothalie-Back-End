@@ -7,6 +7,8 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "doctrine/dbal": "*",
+        "doctrine/doctrine-bundle": "*",
         "nelmio/cors-bundle": "^2.5",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",
