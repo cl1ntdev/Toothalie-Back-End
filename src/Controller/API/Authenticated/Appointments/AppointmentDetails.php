@@ -36,36 +36,44 @@ class AppointmentDetails extends AbstractController
                 ], 400);
             }
 
-            // 1. Get appointment
-            $appointment = $connection->fetchAssociative(
-                "SELECT * FROM appointments WHERE patient_id = ?",
+            // 1. Get ALL appointments for the user
+            $appointments = $connection->fetchAllAssociative(
+                "SELECT * FROM appointments WHERE patient_id = ? ORDER BY appointment_id DESC",
                 [$userID]
             );
 
-            if (!$appointment) {
+            if (!$appointments) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => 'No appointment found for this user'
+                    'message' => 'No appointments found for this user'
                 ], 404);
             }
 
-            // 2. Get dentist details
-            $dentist = $connection->fetchAssociative(
-                "SELECT * FROM dentist WHERE dentistID = ?",
-                [$appointment['dentist_id']]
-            );
+            // 2. Enrich each appointment
+            $results = [];
+            foreach ($appointments as $appointment) {
+                // Dentist info
+                $dentist = $connection->fetchAssociative(
+                    "SELECT * FROM dentist WHERE dentistID = ?",
+                    [$appointment['dentist_id']]
+                );
 
-            // 3. Get all schedules for that dentist
-            $schedules = $connection->fetchAllAssociative(
-                "SELECT * FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
-                [$appointment['dentist_id']]
-            );
+                // Dentist schedules
+                $schedules = $connection->fetchAllAssociative(
+                    "SELECT * FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
+                    [$appointment['dentist_id']]
+                );
+
+                $results[] = [
+                    'appointment' => $appointment,
+                    'dentist' => $dentist,
+                    'schedules' => $schedules
+                ];
+            }
 
             return new JsonResponse([
                 'status' => 'ok',
-                'appointment' => $appointment,
-                'dentist' => $dentist,
-                'schedules' => $schedules
+                'appointments' => $results
             ]);
         } catch (\Exception $e) {
             return new JsonResponse([
