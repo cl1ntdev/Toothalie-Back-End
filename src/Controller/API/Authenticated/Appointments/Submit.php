@@ -23,31 +23,42 @@ class Submit extends AbstractController {
                 'driver' => 'pdo_mysql'
             ];
             $connection = DriverManager::getConnection($connectionParams);
-            
+
             $data = json_decode($req->getContent(), true);
 
-            // if (!$data || !isset($data['patientID'], $data['dentistID'], $data['scheduleID'])) {
-            //     return new JsonResponse([
-            //         'status' => 'error',
-            //         'message' => 'Missing required fields'
-            //     ], 400);
-            // }
+            // Validate request data
+            if (!$data || !isset($data['patientID'], $data['dentistID'], $data['day'], $data['time'])) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'Missing required fields: patientID, dentistID, day, time'
+                ], 400);
+            }
 
-            // $patientID = $data['patientID'];
-            // $dentistID = $data['dentistID'];
-            // $scheduleID = $data['scheduleID']; // must be ID, not string
+            $patientID = $data['patientID'];
+            $dentistID = $data['dentistID'];
+            $day = $data['day'];
+            $time = $data['time'];
 
-            $patientID = 1;
-            $dentistID = 1;
-            $scheduleID = 1;
+            // Fetch scheduleID
+            $schedule = $connection->fetchAssociative(
+                "SELECT scheduleID FROM schedule WHERE dentistID = ? AND day_of_week = ? AND time_slot = ?",
+                [$dentistID, $day, $time]
+            );
 
-            
-            // Insert into appointments
+            if ($schedule === false || !isset($schedule['scheduleID'])) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'No schedule found for the selected dentist, day, and time'
+                ], 400);
+            }
+
+            $scheduleID = $schedule['scheduleID'];
+
+            // Insert appointment
             $connection->insert('appointments', [
                 'patient_id' => $patientID,
                 'dentist_id' => $dentistID,
                 'schedule_id' => $scheduleID
-                // appointment_date will auto-fill with CURRENT_TIMESTAMP
             ]);
 
             return new JsonResponse([
@@ -57,10 +68,7 @@ class Submit extends AbstractController {
         } catch (\Exception $e) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'patient_id' => $patientID,
-                'dentist_id' => $dentistID,
-                'schedule_id' => $scheduleID
+                'message' => 'Failed to book appointment: ' . $e->getMessage()
             ], 500);
         }
     }
