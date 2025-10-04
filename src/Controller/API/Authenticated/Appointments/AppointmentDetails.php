@@ -38,7 +38,7 @@ class AppointmentDetails extends AbstractController
 
             // 1. Get ALL appointments for the user
             $appointments = $connection->fetchAllAssociative(
-                "SELECT * FROM appointments WHERE patient_id = ? ORDER BY appointment_id DESC",
+                "SELECT * FROM appointment WHERE patient_id = ? ORDER BY appointment_id DESC",
                 [$userID]
             );
 

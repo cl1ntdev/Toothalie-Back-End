@@ -39,7 +39,7 @@ class UpdateAppointment extends AbstractController
 
             // Check if appointment exists
             $appointment = $connection->fetchAssociative(
-                "SELECT * FROM appointments WHERE appointment_id = ?",
+                "SELECT * FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]
             );
 
@@ -52,7 +52,7 @@ class UpdateAppointment extends AbstractController
 
             // Update schedule_id in appointment
             $connection->update(
-                'appointments',
+                'appointment',
                 ['schedule_id' => $scheduleID],
                 ['appointment_id' => $appointmentID]
             );

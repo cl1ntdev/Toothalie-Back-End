@@ -38,7 +38,7 @@ class SpecifiedAppointment extends AbstractController
 
             // 1. Get the appointment
             $appointment = $connection->fetchAssociative(
-                "SELECT * FROM appointments WHERE appointment_id = ?",
+                "SELECT * FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]
             );
 

@@ -36,7 +36,7 @@ class DeleteAppointmentAPI extends AbstractController
 
             // Delete the appointment
             $connection->executeStatement(
-                "DELETE FROM appointments WHERE appointment_id = ?",
+                "DELETE FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]
             );
 
