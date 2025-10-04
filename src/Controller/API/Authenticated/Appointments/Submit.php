@@ -55,7 +55,7 @@ class Submit extends AbstractController {
             $scheduleID = $schedule['scheduleID'];
 
             // Insert appointment
-            $connection->insert('appointments', [
+            $connection->insert('appointment', [
                 'patient_id' => $patientID,
                 'dentist_id' => $dentistID,
                 'schedule_id' => $scheduleID
