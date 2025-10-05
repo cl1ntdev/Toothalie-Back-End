@@ -6,24 +6,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
 
-class Submit extends AbstractController {
-
+class Submit extends AbstractController
+{
     #[Route('/api/add-appointment', name: "add-appointment", methods: ['POST'])]
-    public function addAppointment(Request $req): JsonResponse {
+    public function addAppointment(Request $req, Connection $connection): JsonResponse
+    {
         try {
-            // DB connection
-            $connectionParams = [
-                'host' => '127.0.0.1',
-                'port' => 3307,
-                'dbname' => 'ToothalieDb',
-                'user' => 'clint',
-                'password' => 'clinT',
-                'driver' => 'pdo_mysql'
-            ];
-            $connection = DriverManager::getConnection($connectionParams);
-
             $data = json_decode($req->getContent(), true);
 
             // Validate request data
@@ -65,6 +55,7 @@ class Submit extends AbstractController {
                 'status' => 'ok',
                 'message' => 'Appointment booked successfully'
             ]);
+
         } catch (\Exception $e) {
             return new JsonResponse([
                 'status' => 'error',

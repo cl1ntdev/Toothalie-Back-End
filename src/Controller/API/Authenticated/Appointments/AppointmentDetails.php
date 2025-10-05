@@ -6,25 +6,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
 
 class AppointmentDetails extends AbstractController
 {
     #[Route('/api/get-appointment', name: "get-appointment", methods: ['POST'])]
-    public function getAppointment(Request $req): JsonResponse
+    public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
-            // DB connection
-            $connectionParams = [
-                'host' => '127.0.0.1',
-                'port' => 3307,
-                'dbname' => 'ToothalieDb',
-                'user' => 'clint',
-                'password' => 'clinT',
-                'driver' => 'pdo_mysql'
-            ];
-            $connection = DriverManager::getConnection($connectionParams);
-
             // Parse request body
             $data = json_decode($req->getContent(), true);
             $userID = $data['userID'] ?? null;

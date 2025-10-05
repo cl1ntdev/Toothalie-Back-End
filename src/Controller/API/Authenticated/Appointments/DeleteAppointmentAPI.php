@@ -6,24 +6,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
 
 class DeleteAppointmentAPI extends AbstractController
 {
     #[Route('/api/delete-appointment', name: "delete-appointment", methods: ['POST'])]
-    public function deleteAppointment(Request $req): JsonResponse
+    public function deleteAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
-            $connectionParams = [
-                'host' => '127.0.0.1',
-                'port' => 3307,
-                'dbname' => 'ToothalieDb',
-                'user' => 'clint',
-                'password' => 'clinT',
-                'driver' => 'pdo_mysql'
-            ];
-            $connection = DriverManager::getConnection($connectionParams);
-
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointmentID'] ?? null;
 
@@ -35,10 +25,17 @@ class DeleteAppointmentAPI extends AbstractController
             }
 
             // Delete the appointment
-            $connection->executeStatement(
+            $affectedRows = $connection->executeStatement(
                 "DELETE FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]
             );
+
+            if ($affectedRows === 0) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'No appointment found with the given ID'
+                ], 404);
+            }
 
             return new JsonResponse([
                 'status' => 'ok',
