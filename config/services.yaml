@@ -16,12 +16,12 @@ services:
     App\:
         resource: "../src/"
 
-    # Doctrine DBAL Connection service
-    Doctrine\DBAL\Connection:
-        class: Doctrine\DBAL\Connection
-        factory: ['Doctrine\DBAL\DriverManager', "getConnection"]
-        arguments:
-            - url: "%env(resolve:DATABASE_URL)%"
+    # # Doctrine DBAL Connection service
+    # Doctrine\DBAL\Connection:
+    #     class: Doctrine\DBAL\Connection
+    #     factory: ['Doctrine\DBAL\DriverManager', "getConnection"]
+    #     arguments:
+    #         - url: "%env(resolve:DATABASE_URL)%"
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
