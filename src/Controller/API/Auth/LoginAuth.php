@@ -6,12 +6,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
 
 class LoginAuth extends AbstractController {
     
     #[Route('/api/login-auth',name:"login-auth",methods:['POST'])]
-    public function doGetUser(Request $req):JsonResponse{
+    public function doGetUser(Request $req, Connection $connection):JsonResponse{
         
         try {
             // Get password from user Input
@@ -19,18 +19,6 @@ class LoginAuth extends AbstractController {
             $username = $userInput['username'];
             $password = $userInput['password'];
 
-            // Create database connection
-            $connectionParams = [
-                'host' => '127.0.0.1',
-                'port' => 3307,
-                'dbname' => 'ToothalieDb',
-                'user' => 'clint',
-                'password' => 'clinT',
-                'driver' => 'pdo_mysql'
-            ];
-            
-            $connection = DriverManager::getConnection($connectionParams);
-            
             // Query patient table with proper column names
             $patient = $connection->fetchAssociative(
                 "SELECT patient_id, username, first_name, last_name, role, password FROM patient WHERE username = ?",
@@ -44,7 +32,8 @@ class LoginAuth extends AbstractController {
             }
             
             // Verify password (in production, use password_hash/password_verify)
-            if (!password_verify($password, $patient['password'])) {
+            // !password_verify($password, $patient['password'])
+            if ($password != $patient['password']) {
                 return new JsonResponse([
                     'status' => "username or password incorrect"
                 ], 401);
