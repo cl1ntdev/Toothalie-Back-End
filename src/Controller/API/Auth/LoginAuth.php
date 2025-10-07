@@ -27,7 +27,8 @@ class LoginAuth extends AbstractController {
             
             if (!$patient) {
                 return new JsonResponse([
-                    'status' => "username or password incorrect"
+                    'status' => "error",
+                    'message'=> "no patient found"
                 ], 401);
             }
             
@@ -35,7 +36,8 @@ class LoginAuth extends AbstractController {
             // !password_verify($password, $patient['password'])
             if ($password != $patient['password']) {
                 return new JsonResponse([
-                    'status' => "username or password incorrect"
+                    'status' => "error",
+                    'message' => "username or password incorrect"
                 ], 401);
             }
             
