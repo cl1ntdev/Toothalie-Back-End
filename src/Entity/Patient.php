@@ -35,5 +35,35 @@ class Patient
     #[ORM\OneToMany(mappedBy: "patient", targetEntity: Appointment::class)]
     private $appointments;
 
+    #[ORM\Column(length: 15)]
+    private ?string $contact_no = null;
+
+    #[ORM\Column(length: 30)]
+    private ?string $email = null;
+
     // getters and setters...
+
+    public function getContactNo(): ?string
+    {
+        return $this->contact_no;
+    }
+
+    public function setContactNo(string $contact_no): static
+    {
+        $this->contact_no = $contact_no;
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
 }
