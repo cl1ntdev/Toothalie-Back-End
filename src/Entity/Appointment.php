@@ -29,5 +29,20 @@ class Appointment
     #[ORM\JoinColumn(name: "schedule_id", referencedColumnName: "scheduleID", nullable: false)]
     private Schedule $schedule;
 
+    #[ORM\Column(nullable: true)]
+    private ?bool $Emergency = null;
+
     // getters and setters...
+
+    public function isEmergency(): ?bool
+    {
+        return $this->Emergency;
+    }
+
+    public function setEmergency(?bool $Emergency): static
+    {
+        $this->Emergency = $Emergency;
+
+        return $this;
+    }
 }
