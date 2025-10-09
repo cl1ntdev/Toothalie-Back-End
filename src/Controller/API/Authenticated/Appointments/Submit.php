@@ -38,7 +38,7 @@ class Submit extends AbstractController
             $setAppointmentType = $familyBooking == True ? 2 : 1;    // 1 is Normal and 2 is Family 
             
             $setDate = $data['date'];
-            
+            $status = "Pending"; // defualt valUE
 
             // Fetch scheduleID
             $schedule = $connection->fetchAssociative(
@@ -63,6 +63,7 @@ class Submit extends AbstractController
                 'emergency' => $setEmergency,
                 'appointment_type_id'=> $setAppointmentType,
                 'user_set_date'=> $setDate,
+                'status'=>$status
                  
             ]);
 
