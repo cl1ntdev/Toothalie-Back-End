@@ -28,6 +28,17 @@ class Submit extends AbstractController
             $dentistID = $data['dentistID'];
             $day = $data['day'];
             $time = $data['time'];
+            
+            // set emergency value to be passed
+            $emergency=$data['emergency'];
+            $setEmergency = $emergency == True ? 1 : 0;
+            
+            // set family value to be passed 
+            $familyBooking=$data['familyBooking'];
+            $setAppointmentType = $familyBooking == True ? 2 : 1;    // 1 is Normal and 2 is Family 
+            
+            $setDate = $data['date'];
+            
 
             // Fetch scheduleID
             $schedule = $connection->fetchAssociative(
@@ -48,7 +59,11 @@ class Submit extends AbstractController
             $connection->insert('appointment', [
                 'patient_id' => $patientID,
                 'dentist_id' => $dentistID,
-                'schedule_id' => $scheduleID
+                'schedule_id' => $scheduleID,
+                'emergency' => $setEmergency,
+                'appointment_type_id'=> $setAppointmentType,
+                'user_set_date'=> $setDate,
+                 
             ]);
 
             return new JsonResponse([
