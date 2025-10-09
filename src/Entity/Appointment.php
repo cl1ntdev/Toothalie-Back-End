@@ -32,6 +32,16 @@ class Appointment
     #[ORM\Column(nullable: true)]
     private ?bool $Emergency = null;
 
+    #[ORM\ManyToOne(inversedBy: 'appointments')]
+    private ?AppointmentType $appointmentType = null;
+
+   
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $userSetDate = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $Status = null;
+
     // getters and setters...
 
     public function isEmergency(): ?bool
@@ -42,6 +52,44 @@ class Appointment
     public function setEmergency(?bool $Emergency): static
     {
         $this->Emergency = $Emergency;
+
+        return $this;
+    }
+
+    public function getAppointmentType(): ?AppointmentType
+    {
+        return $this->appointmentType;
+    }
+
+    public function setAppointmentType(?AppointmentType $appointmentType): static
+    {
+        $this->appointmentType = $appointmentType;
+
+        return $this;
+    }
+
+   
+
+    public function getUserSetDate(): ?string
+    {
+        return $this->userSetDate;
+    }
+
+    public function setUserSetDate(?string $userSetDate): static
+    {
+        $this->userSetDate = $userSetDate;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->Status;
+    }
+
+    public function setStatus(?string $Status): static
+    {
+        $this->Status = $Status;
 
         return $this;
     }
