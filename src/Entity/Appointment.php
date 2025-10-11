@@ -42,6 +42,9 @@ class Appointment
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $Status = null;
 
+    #[ORM\Column(length: 200, nullable: true)]
+    private ?string $message = null;
+
     // getters and setters...
 
     public function isEmergency(): ?bool
@@ -90,6 +93,18 @@ class Appointment
     public function setStatus(?string $Status): static
     {
         $this->Status = $Status;
+
+        return $this;
+    }
+
+    public function getMessage(): ?string
+    {
+        return $this->message;
+    }
+
+    public function setMessage(?string $message): static
+    {
+        $this->message = $message;
 
         return $this;
     }
