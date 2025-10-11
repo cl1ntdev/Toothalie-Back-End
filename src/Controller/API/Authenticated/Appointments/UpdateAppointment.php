@@ -18,7 +18,15 @@ class UpdateAppointment extends AbstractController
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointmentID'] ?? null;
             $scheduleID = $data['scheduleID'] ?? null;
-
+            $date = $data['date'];
+            
+            $emergency = !empty($data['isEmergency']) ? 1 : 0;
+            $appointment_type_id = !empty($data['isFamilyBooking']) ? 2 : 1;
+            $message = $data['message'];
+            
+        
+            
+            
             if (!$appointmentID || !$scheduleID) {
                 return new JsonResponse([
                     'status' => 'error',
@@ -41,9 +49,15 @@ class UpdateAppointment extends AbstractController
 
             // Update schedule_id in appointment
             $connection->update(
-                'appointment',
-                ['schedule_id' => $scheduleID],
-                ['appointment_id' => $appointmentID]
+            'appointment',
+               [
+                   'schedule_id' => $scheduleID,
+                   'user_set_date' => $date,
+                   'emergency' => $emergency,
+                   'appointment_type_id'=> $appointment_type_id,
+                   'message'=> $message
+               ],
+                ['appointment_id'=>$appointmentID]
             );
 
             return new JsonResponse([
