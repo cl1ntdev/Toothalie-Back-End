@@ -29,6 +29,7 @@ class Submit extends AbstractController
             $day = $data['day'];
             $time = $data['time'];
             
+            
             // set emergency value to be passed
             $emergency=$data['emergency'];
             $setEmergency = $emergency == True ? 1 : 0;
@@ -39,7 +40,9 @@ class Submit extends AbstractController
             
             $setDate = $data['date'];
             $status = "Pending"; // defualt valUE
-
+            $message = $data['message'];
+            
+            
             // Fetch scheduleID
             $schedule = $connection->fetchAssociative(
                 "SELECT scheduleID FROM schedule WHERE dentistID = ? AND day_of_week = ? AND time_slot = ?",
@@ -63,7 +66,8 @@ class Submit extends AbstractController
                 'emergency' => $setEmergency,
                 'appointment_type_id'=> $setAppointmentType,
                 'user_set_date'=> $setDate,
-                'status'=>$status
+                'status'=>$status,
+                'message'=>$message
                  
             ]);
 
