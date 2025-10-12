@@ -15,7 +15,7 @@ class AppointmentDetails extends AbstractController
     {
         try {
             $data = json_decode($req->getContent(), true);
-            $userID = $data['userID'] ?? null;
+            $userID = $data['dentistID'] ?? null;
 
             if (!$userID) {
                 return new JsonResponse([
@@ -39,19 +39,18 @@ class AppointmentDetails extends AbstractController
             $results = [];
             foreach ($appointments as $appointment) {
                 $dentist = $connection->fetchAssociative(
-                    "SELECT * FROM dentist WHERE dentistID = ?",
-                    [$appointment['dentist_id']]
+                    "SELECT * FROM patient WHERE patient_id = ?",
+                    [$appointment['patient_id']]
                 );
 
-                $schedules = $connection->fetchAllAssociative(
-                    "SELECT * FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
-                    [$appointment['dentist_id']]
+                $schedule = $connection->fetchAllAssociative(
+                    "SELECT * FROM schedule WHERE scheduleID = ? ORDER BY day_of_week, time_slot",
+                    [$appointment['schedule_id']]
                 );
 
                 $results[] = [
                     'appointment' => $appointment,
-                    'dentist' => $dentist,
-                    'schedules' => $schedules
+                    'patients' => $dentist,
                 ];
             }
 
