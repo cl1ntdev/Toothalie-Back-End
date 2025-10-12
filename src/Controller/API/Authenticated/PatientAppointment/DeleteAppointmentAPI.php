@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\API\Authenticated\Appointments;
+namespace App\Controller\API\Authenticated\PatientAppointment;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,7 +24,6 @@ class DeleteAppointmentAPI extends AbstractController
                 ], 400);
             }
 
-            // Delete the appointment
             $affectedRows = $connection->executeStatement(
                 "DELETE FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]

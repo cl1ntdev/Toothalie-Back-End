@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\API\Authenticated\PatientAppointment;
+namespace App\Controller\API\Authenticated\DentistAppointment;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,7 +10,7 @@ use Doctrine\DBAL\Connection;
 
 class AppointmentDetails extends AbstractController
 {
-    #[Route('/api/get-appointment', name: "get-appointment", methods: ['POST'])]
+    #[Route('/api/get-appointment-dentist', name: "get-appointment-dentist", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
@@ -25,7 +25,7 @@ class AppointmentDetails extends AbstractController
             }
 
             $appointments = $connection->fetchAllAssociative(
-                "SELECT * FROM appointment WHERE patient_id = ? ORDER BY appointment_id DESC",
+                "SELECT * FROM appointment WHERE dentist_id = ? ORDER BY appointment_id DESC",
                 [$userID]
             );
 
@@ -38,7 +38,6 @@ class AppointmentDetails extends AbstractController
 
             $results = [];
             foreach ($appointments as $appointment) {
-                // Dentist info
                 $dentist = $connection->fetchAssociative(
                     "SELECT * FROM dentist WHERE dentistID = ?",
                     [$appointment['dentist_id']]

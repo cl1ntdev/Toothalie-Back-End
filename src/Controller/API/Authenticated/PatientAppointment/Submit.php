@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\API\Authenticated\Appointments;
+namespace App\Controller\API\Authenticated\PatientAppointment;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +16,6 @@ class Submit extends AbstractController
         try {
             $data = json_decode($req->getContent(), true);
 
-            // Validate request data
             if (!$data || !isset($data['patientID'], $data['dentistID'], $data['day'], $data['time'])) {
                 return new JsonResponse([
                     'status' => 'error',
@@ -30,11 +29,9 @@ class Submit extends AbstractController
             $time = $data['time'];
             
             
-            // set emergency value to be passed
             $emergency=$data['emergency'];
             $setEmergency = $emergency == True ? 1 : 0;
             
-            // set family value to be passed 
             $familyBooking=$data['familyBooking'];
             $setAppointmentType = $familyBooking == True ? 2 : 1;    // 1 is Normal and 2 is Family 
             
@@ -43,7 +40,6 @@ class Submit extends AbstractController
             $message = $data['message'];
             
             
-            // Fetch scheduleID
             $schedule = $connection->fetchAssociative(
                 "SELECT scheduleID FROM schedule WHERE dentistID = ? AND day_of_week = ? AND time_slot = ?",
                 [$dentistID, $day, $time]

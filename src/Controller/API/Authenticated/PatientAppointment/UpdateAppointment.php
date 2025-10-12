@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\API\Authenticated\Appointments;
+namespace App\Controller\API\Authenticated\PatientAppointment;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,7 +14,6 @@ class UpdateAppointment extends AbstractController
     public function updateAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
-            // Parse request body
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointmentID'] ?? null;
             $scheduleID = $data['scheduleID'] ?? null;
@@ -34,7 +33,6 @@ class UpdateAppointment extends AbstractController
                 ], 400);
             }
 
-            // Check if appointment exists
             $appointment = $connection->fetchAssociative(
                 "SELECT * FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]
@@ -47,7 +45,6 @@ class UpdateAppointment extends AbstractController
                 ], 404);
             }
 
-            // Update schedule_id in appointment
             $connection->update(
             'appointment',
                [

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\API\Authenticated\Appointments;
+namespace App\Controller\API\Authenticated\PatientAppointment;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,7 +14,6 @@ class SpecifiedAppointment extends AbstractController
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
-            // Parse request body
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointmentID'] ?? null;
 
@@ -25,7 +24,6 @@ class SpecifiedAppointment extends AbstractController
                 ], 400);
             }
 
-            // 1. Get the appointment
             $appointment = $connection->fetchAssociative(
                 "SELECT * FROM appointment WHERE appointment_id = ?",
                 [$appointmentID]
@@ -38,13 +36,11 @@ class SpecifiedAppointment extends AbstractController
                 ], 404);
             }
 
-            // 2. Get dentist info
             $dentist = $connection->fetchAssociative(
                 "SELECT * FROM dentist WHERE dentistID = ?",
                 [$appointment['dentist_id']]
             );
 
-            // 3. Get schedules for that dentist
             $schedules = $connection->fetchAllAssociative(
                 "SELECT scheduleID, day_of_week, time_slot 
                  FROM schedule 
@@ -53,7 +49,6 @@ class SpecifiedAppointment extends AbstractController
                 [$appointment['dentist_id']]
             );
 
-            // Group schedules by day
             $groupedSchedules = [];
             foreach ($schedules as $s) {
                 $groupedSchedules[$s['day_of_week']][] = [
