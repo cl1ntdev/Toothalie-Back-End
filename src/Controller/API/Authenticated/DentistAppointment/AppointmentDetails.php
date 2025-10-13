@@ -13,6 +13,12 @@ class AppointmentDetails extends AbstractController
     #[Route('/api/get-appointment-dentist', name: "get-appointment-dentist", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
+        // >> >> >> << << << 
+        // 
+        // Returns Appointments assigned to Dentist
+        // 
+        // >> >> >> << << << 
+        
         try {
             $data = json_decode($req->getContent(), true);
             $userID = $data['dentistID'] ?? null;

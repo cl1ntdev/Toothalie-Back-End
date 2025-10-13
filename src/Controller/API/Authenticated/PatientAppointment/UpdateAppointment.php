@@ -10,6 +10,11 @@ use Doctrine\DBAL\Connection;
 
 class UpdateAppointment extends AbstractController
 {
+    // >> >> >> << << << 
+    // 
+    // UPDATE APPOINTMENT VALUE BY THE PATIENT
+    // 
+    // >> >> >> << << << 
     #[Route('/api/update-appointment', name: "update-appointment", methods: ['POST'])]
     public function updateAppointment(Request $req, Connection $connection): JsonResponse
     {

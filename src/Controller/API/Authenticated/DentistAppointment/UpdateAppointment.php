@@ -13,6 +13,11 @@ class UpdateAppointment extends AbstractController
     #[Route('/api/edit-appointment-dentist', name: "edit-appointment-dentist", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
+        // >> >> >> << << << 
+        // 
+        // Returns boolean for checking status if it is successful or not
+        // 
+        // >> >> >> << << << 
         try {
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointment_id'] ?? null;

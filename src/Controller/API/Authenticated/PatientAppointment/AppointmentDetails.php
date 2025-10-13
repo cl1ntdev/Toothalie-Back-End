@@ -10,6 +10,11 @@ use Doctrine\DBAL\Connection;
 
 class AppointmentDetails extends AbstractController
 {
+    // >> >> >> << << << 
+    // 
+    // Returns all appointments made by the user
+    // 
+    // >> >> >> << << << 
     #[Route('/api/get-appointment', name: "get-appointment", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {

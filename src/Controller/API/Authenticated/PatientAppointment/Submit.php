@@ -10,6 +10,11 @@ use Doctrine\DBAL\Connection;
 
 class Submit extends AbstractController
 {
+    // >> >> >> << << << 
+    // 
+    // Append new appointment to db
+    // 
+    // >> >> >> << << << 
     #[Route('/api/add-appointment', name: "add-appointment", methods: ['POST'])]
     public function addAppointment(Request $req, Connection $connection): JsonResponse
     {

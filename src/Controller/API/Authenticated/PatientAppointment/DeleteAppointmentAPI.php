@@ -10,6 +10,11 @@ use Doctrine\DBAL\Connection;
 
 class DeleteAppointmentAPI extends AbstractController
 {
+    // >> >> >> << << << 
+    // 
+    // DELETE AN APPOINTMENT from patient
+    // 
+    // >> >> >> << << << 
     #[Route('/api/delete-appointment', name: "delete-appointment", methods: ['POST'])]
     public function deleteAppointment(Request $req, Connection $connection): JsonResponse
     {

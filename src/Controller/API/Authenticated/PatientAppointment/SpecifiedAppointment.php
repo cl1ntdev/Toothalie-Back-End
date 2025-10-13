@@ -10,6 +10,11 @@ use Doctrine\DBAL\Connection;
 
 class SpecifiedAppointment extends AbstractController
 {
+    // >> >> >> << << << 
+    // 
+    // Returns only one (1) Appointment of the user, used for editing
+    // 
+    // >> >> >> << << << 
     #[Route('/api/specified-appointment', name: "specified-appointment", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
@@ -57,7 +62,6 @@ class SpecifiedAppointment extends AbstractController
                 ];
             }
 
-            // 4. Get the specific schedule used in this appointment
             $selectedSchedule = $connection->fetchAssociative(
                 "SELECT scheduleID, day_of_week, time_slot 
                  FROM schedule 
@@ -65,7 +69,6 @@ class SpecifiedAppointment extends AbstractController
                 [$appointment['schedule_id']]
             );
 
-            // 5. Return unified response
             return new JsonResponse([
                 'status' => 'ok',
                 'appointment' => $appointment,
