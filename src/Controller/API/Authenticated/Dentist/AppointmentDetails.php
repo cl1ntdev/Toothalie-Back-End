@@ -2,6 +2,7 @@
 
 namespace App\Controller\API\Authenticated\Dentist;
 
+use App\Entity\Schedule;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -49,7 +50,7 @@ class AppointmentDetails extends AbstractController
                     [$appointment['patient_id']]
                 );
 
-                $schedule = $connection->fetchAllAssociative(
+                $schedule = $connection->fetchAssociative(
                     "SELECT * FROM schedule WHERE scheduleID = ? ORDER BY day_of_week, time_slot",
                     [$appointment['schedule_id']]
                 );
@@ -57,6 +58,7 @@ class AppointmentDetails extends AbstractController
                 $results[] = [
                     'appointment' => $appointment,
                     'patients' => $dentist,
+                    'schedule' => $schedule
                 ];
             }
 
