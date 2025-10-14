@@ -25,7 +25,6 @@ class EditSettings extends AbstractController
             return new JsonResponse(['message' => 'Missing dentistID'], 400);
         }
 
-        // Fetch existing schedule IDs from DB
         $existing = $conn->fetchAllAssociative(
             "SELECT scheduleID FROM schedule WHERE dentistID = ?",
             [$dentistID]
@@ -64,17 +63,17 @@ class EditSettings extends AbstractController
             }
         }
 
-        // Delete removed schedules
+        //delete removed schedules
         $toDelete = array_diff($existingIDs, $newIDs);
         
         if (!empty($toDelete)) {
-            // Convert values to integers (safety)
+            //convert values to integers (safety)
             $toDelete = array_map('intval', $toDelete);
         
-            // Build a dynamic placeholder list like (?, ?, ?)
+            //build a dynamic placeholder list like (?, ?, ?)
             $placeholders = implode(',', array_fill(0, count($toDelete), '?'));
         
-            // Run delete query safely
+            // delete query safely
             $conn->executeStatement(
                 "DELETE FROM schedule WHERE scheduleID IN ($placeholders)",
                 $toDelete
@@ -83,7 +82,8 @@ class EditSettings extends AbstractController
 
 
         return new JsonResponse([
-            'message' => 'Dentist schedule updated successfully',
+        'message' => 'Dentist schedule updated successfully',
+            'status' => 'ok',
             'updated' => $newIDs,
             'deleted' => array_values($toDelete),
         ]);
