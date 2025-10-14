@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\API\Authenticated\DentistAppointment;
+namespace App\Controller\API\Authenticated\Dentist;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
