@@ -3,6 +3,7 @@ namespace App\Controller\API\Authenticated;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
 
@@ -41,5 +42,39 @@ class GetDentists extends AbstractController {
                 "message" => $e->getMessage()
             ], 500);
         }
+    }
+    
+    #[Route('/api/dentist-info',name:'dentist-info',methods:['POST'])]
+    public function getLoggedInDentistInfo(Request $req,Connection $con):JsonResponse{
+        $data = json_decode($req->getContent(),true);
+        $dentistID = $data['dentistID'];
+        if(!$dentistID){
+            return new JsonResponse([
+                'status' => 'error',
+                'message'=> 'no dentist id found'
+            ]);
+        }
+        
+        try{
+            $dentistInfo = $con->fetchAssociative(
+            "Select * from dentist where dentistID = ?",
+            [$dentistID]
+            );
+            $schedule = $con->fetchAllAssociative(
+            "Select * from schedule where dentistID = ?",
+            [$dentistID]
+            );
+            return new JsonResponse([
+                'status' => 'ok',
+                'dentist' => $dentistInfo,
+                'schedule' => $schedule
+            ]);
+        }catch(e){
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => e
+            ]);
+        }
+        
     }
 }
