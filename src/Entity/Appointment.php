@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\AppointmentRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AppointmentRepository::class)]
@@ -44,6 +45,9 @@ class Appointment
 
     #[ORM\Column(length: 200, nullable: true)]
     private ?string $message = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTime $DeletedOn = null;
 
     // getters and setters...
 
@@ -105,6 +109,18 @@ class Appointment
     public function setMessage(?string $message): static
     {
         $this->message = $message;
+
+        return $this;
+    }
+
+    public function getDeletetOn(): ?\DateTime
+    {
+        return $this->DeletetOn;
+    }
+
+    public function setDeletetOn(?\DateTime $DeletetOn): static
+    {
+        $this->DeletetOn = $DeletetOn;
 
         return $this;
     }
