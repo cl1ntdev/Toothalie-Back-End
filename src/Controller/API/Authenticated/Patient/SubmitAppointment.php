@@ -71,7 +71,27 @@ class SubmitAppointment extends AbstractController
                 'message'=>$message
                  
             ]);
-
+            
+            $appointmentID = $connection->lastInsertId();
+            $connection->insert('appointment_log', [
+                           'appointment_id' => $appointmentID,
+                           'actor_type' => 'patient',
+                           'action' => 'create',
+                           'message' => 'Created a new appointment request.',
+                           'snapshot' => json_encode([
+                               'patient_id' => $patientID,
+                               'dentist_id' => $dentistID,
+                               'schedule_id' => $scheduleID,
+                               'emergency' => $setEmergency,
+                               'appointment_type_id' => $setAppointmentType,
+                               'user_set_date' => $setDate,
+                               'status' => $status,
+                               'message' => $message
+                           ]),
+                           'logged_at' => (new \DateTime())->format('Y-m-d H:i:s')
+            ]);
+            
+            
             return new JsonResponse([
                 'status' => 'ok',
                 'message' => 'Appointment booked successfully'
