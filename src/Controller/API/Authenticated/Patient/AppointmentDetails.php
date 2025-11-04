@@ -30,7 +30,7 @@ class AppointmentDetails extends AbstractController
             }
 
             $appointments = $connection->fetchAllAssociative(
-                "SELECT * FROM appointment WHERE patient_id = ? ORDER BY appointment_id DESC",
+                "SELECT * FROM appointment WHERE patient_id = ? AND deleted_on IS NULL ORDER BY appointment_id DESC",
                 [$userID]
             );
 
