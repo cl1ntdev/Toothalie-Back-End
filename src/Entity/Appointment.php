@@ -46,8 +46,9 @@ class Appointment
     #[ORM\Column(length: 200, nullable: true)]
     private ?string $message = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $DeletedOn = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTime $deletedOn = null;
+
 
     // getters and setters...
 
@@ -113,15 +114,15 @@ class Appointment
         return $this;
     }
 
-    public function getDeletetOn(): ?\DateTime
+    public function getDeletedOn(): ?\DateTime
     {
-        return $this->DeletetOn;
+        return $this->deletedOn;
     }
-
-    public function setDeletetOn(?\DateTime $DeletetOn): static
+    
+    public function setDeletedOn(?\DateTime $deletedOn): self
     {
-        $this->DeletetOn = $DeletetOn;
-
+        $this->deletedOn = $deletedOn;
         return $this;
     }
+
 }
