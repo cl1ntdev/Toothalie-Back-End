@@ -30,7 +30,7 @@ class DeleteAppointmentAPI extends AbstractController
             }
 
             $affectedRows = $connection->executeStatement(
-                "UPDATE appointment SET deleted_on = NOW() WHERE appointment_id = ?",
+                "UPDATE appointment SET deleted_on = CURRENT_TIMESTAMP WHERE appointment_id = ?",
                 [$appointmentID]
             );
 
