@@ -9,9 +9,8 @@ security:
             entity:
                 class: App\Entity\User
                 property: email
-                
-                
-                
+        # used to reload user from session & other features (e.g. switch_user)
+                               
                 
                 
     firewalls:
@@ -20,8 +19,8 @@ security:
             security: false
         main:
             lazy: true
-            provider: users_in_memory 
-            # provider: app_user_provider
+            # provider: users_in_memory 
+            provider: app_user_provider
 
 
 
@@ -30,11 +29,37 @@ security:
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
+        login:
+            provider: app_user_provider   
+            pattern: ^/api/login
+            stateless: true
+            json_login:
+                check_path: /api/login
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+           
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
+
+
+
+
+
+
+
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - {path: ^/dashboard, roles: ROLE_USER}
+        - { path: ^/dashboard, roles: ROLE_USER}
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        # - { path: ^/api/get-user-info, roles: ROLE_USER }
+        
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
