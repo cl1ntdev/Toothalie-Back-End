@@ -40,7 +40,21 @@ class DeleteAppointmentAPI extends AbstractController
                     'message' => 'No appointment found with the given ID'
                 ], 404);
             }
-
+                      $appointment = $connection->fetchAssociative(
+                          "SELECT * FROM appointment WHERE appointment_id = ?",
+                          [$appointmentID]
+                      );
+          
+                      $connection->insert('appointment_log', [
+                          'appointment_id' => $appointmentID,
+                          'actor_type' => 'patient',
+                          'action' => 'delete',
+                          'message' => 'Deleted an appointment request.',
+                          'snapshot' => json_encode($appointment ?: []),
+                          'logged_at' => (new \DateTime())->format('Y-m-d H:i:s')
+                      ]);
+                      
+                      
             return new JsonResponse([
                 'status' => 'ok',
                 'message' => 'Appointment deleted successfully'

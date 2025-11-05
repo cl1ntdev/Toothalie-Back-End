@@ -27,7 +27,8 @@ final class GetHistory extends AbstractController
 
             // 🩺 Step 1: Get all appointment IDs for this patient
             $appointmentIDs = $connection->fetchFirstColumn(
-                "SELECT appointment_id FROM appointment WHERE patient_id = ? AND deleted_on IS NULL",
+                "SELECT appointment_id FROM appointment WHERE patient_id = ?",
+                // "SELECT appointment_id FROM appointment WHERE patient_id = ? AND deleted_on IS NULL",
                 [$patientID]
             );
 

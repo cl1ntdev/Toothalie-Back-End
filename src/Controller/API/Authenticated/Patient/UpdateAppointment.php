@@ -61,6 +61,23 @@ class UpdateAppointment extends AbstractController
                ],
                 ['appointment_id'=>$appointmentID]
             );
+            
+                       $appointmentAfter = $connection->fetchAssociative(
+                           "SELECT * FROM appointment WHERE appointment_id = ?",
+                           [$appointmentID]
+                       );
+           
+                       $connection->insert('appointment_log', [
+                           'appointment_id' => $appointmentID,
+                           'actor_type' => 'patient',
+                           'action' => 'update',
+                           'message' => 'Updated appointment details.',
+                           'snapshot' => json_encode([
+                               'before' => $appointment,
+                               'after' => $appointmentAfter
+                           ]),
+                           'logged_at' => (new \DateTime())->format('Y-m-d H:i:s')
+                       ]);
 
             return new JsonResponse([
                 'status' => 'ok',
