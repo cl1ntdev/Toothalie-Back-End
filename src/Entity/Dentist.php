@@ -32,5 +32,35 @@ class Dentist
     #[ORM\OneToMany(mappedBy: "dentist", targetEntity: Appointment::class)]
     private $appointments;
 
+    #[ORM\Column(length: 100)]
+    private ?string $username = null;
+
+    #[ORM\Column(length: 100)]
+    private ?string $password = null;
+
     // getters and setters...
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): static
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
 }
