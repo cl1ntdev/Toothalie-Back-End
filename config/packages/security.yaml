@@ -4,11 +4,20 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
-        app_user_provider:
-            entity:
-                class: App\Entity\User
-                property: email
+        in_memory:
+            memory:
+                users:
+                    admin:
+                        password: '$2y$13$VFXSm8l2rgc5BzG8RTFewOTu/DKefPPSzecYobbVk1/sP6CqNs2Au'
+                        roles: ["ROLE_ADMIN"] 
+                    user:
+                        password: '$2y$13$VFXSm8l2rgc5BzG8RTFewOTu/DKefPPSzecYobbVk1/sP6CqNs2Au'
+                        roles: ["ROLE_USER"] 
+        # users_in_memory: { memory: null }
+        # app_user_provider:
+        
+                        
+                        
         # used to reload user from session & other features (e.g. switch_user)
                                
                 
@@ -19,9 +28,9 @@ security:
             security: false
         main:
             lazy: true
-            # provider: users_in_memory 
-            provider: app_user_provider
-
+            provider: in_memory 
+            # provider: app_user_provider
+            http_basic: ~
 
 
             # activate different ways to authenticate
@@ -29,22 +38,12 @@ security:
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
-        login:
-            provider: app_user_provider   
-            pattern: ^/api/login
-            stateless: true
-            json_login:
-                check_path: /api/login
-                username_path: email
-                password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+       
            
-        api:
-            pattern: ^/api/
-            stateless: true
-            provider: app_user_provider
-            jwt: ~
+        # api:
+        #     pattern: ^/api/
+        #     stateless: true
+        #     provider: app_user_provider
 
     # Optional: For web routes if you have a dashboard or front-end route that needs sessions
     #     main:
@@ -61,7 +60,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         # # FOR TESTING
-        # - { path: ^/dashboard, roles: ROLE_USER}
+        - { path: ^/dashboard, roles: [ROLE_ADMIN, ROLE_USER]}
         
        
         # # public access
