@@ -25,7 +25,7 @@ final class GetHistory extends AbstractController
                 ], 400);
             }
 
-            // 🩺 Step 1: Get all appointment IDs for this patient
+            //Get all appointment IDs for this patient
             $appointmentIDs = $connection->fetchFirstColumn(
                 "SELECT appointment_id FROM appointment WHERE patient_id = ?",
                 // "SELECT appointment_id FROM appointment WHERE patient_id = ? AND deleted_on IS NULL",
@@ -40,7 +40,7 @@ final class GetHistory extends AbstractController
                 ]);
             }
 
-            // 🧾 Step 2: Fetch all logs related to those appointments
+            //  Fetch all logs related to those appointments
             $logs = $connection->fetchAllAssociative(
                 "SELECT 
                     al.*, 

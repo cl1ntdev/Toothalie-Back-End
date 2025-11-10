@@ -41,12 +41,16 @@ security:
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
            
         api:
-            pattern: ^/api
+            pattern: ^/api/
             stateless: true
             provider: app_user_provider
             jwt: ~
 
-
+    # Optional: For web routes if you have a dashboard or front-end route that needs sessions
+    #     main:
+    #         lazy: true
+    #         provider: app_user_provider
+    #         logout: true
 
 
 
@@ -56,10 +60,20 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/dashboard, roles: ROLE_USER}
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        # - { path: ^/api/get-user-info, roles: ROLE_USER }
+        # # FOR TESTING
+        # - { path: ^/dashboard, roles: ROLE_USER}
         
+       
+        # # public access
+        # - { path: ^/api/login, roles: PUBLIC_ACCESS }        
+        # - { path: ^/api/login-auth, roles: PUBLIC_ACCESS }
+        
+        #  # protected
+        # - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        
+        
+        
+        # - { path: ^/api/get-user-info, roles: ROLE_USER }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 

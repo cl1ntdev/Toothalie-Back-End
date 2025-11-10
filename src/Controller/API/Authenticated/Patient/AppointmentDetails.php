@@ -10,11 +10,7 @@ use Doctrine\DBAL\Connection;
 
 class AppointmentDetails extends AbstractController
 {
-    // >> >> >> << << << 
-    // 
     // Returns all appointments made by the user
-    // 
-    // >> >> >> << << << 
     #[Route('/api/get-appointment', name: "get-appointment", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
@@ -29,6 +25,7 @@ class AppointmentDetails extends AbstractController
                 ], 400);
             }
 
+            // Fetch all appointments for the patient
             $appointments = $connection->fetchAllAssociative(
                 "SELECT * FROM appointment WHERE patient_id = ? AND deleted_on IS NULL ORDER BY appointment_id DESC",
                 [$userID]
@@ -43,12 +40,14 @@ class AppointmentDetails extends AbstractController
 
             $results = [];
             foreach ($appointments as $appointment) {
-                // Dentist info
+                // Dentist info from the unified User table
                 $dentist = $connection->fetchAssociative(
-                    "SELECT * FROM dentist WHERE dentistID = ?",
+                    "SELECT id, username, first_name, last_name, email, roles 
+                     FROM user WHERE id = ?",
                     [$appointment['dentist_id']]
                 );
 
+                // Dentist schedule
                 $schedules = $connection->fetchAllAssociative(
                     "SELECT * FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
                     [$appointment['dentist_id']]
