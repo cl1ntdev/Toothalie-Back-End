@@ -3,19 +3,18 @@
 namespace App\Controller\API\Auth;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
-
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\Security\Core\User\InMemoryUser;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Entity\User;
+
 class LoginAuth extends AbstractController
 {
     #[Route('/api/login-auth', name: "login-auth", methods: ['POST'])]
-    public function doGetUser(Request $req, Connection $connection, JWTTokenManagerInterface $jwtManager): JsonResponse
+    public function doGetUser(Request $req, Connection $connection, JWTTokenManagerInterface $jwtManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         try {
             $userInput = json_decode($req->getContent(), true);
@@ -29,19 +28,13 @@ class LoginAuth extends AbstractController
                 ], 400);
             }
 
+            // Fetch user info from `user` table
             $user = $connection->fetchAssociative(
-                "SELECT patient_id AS id, username, first_name, last_name, role, password, 'patient' AS user_type
-                 FROM patient WHERE username = ?",
+                "SELECT id, username, email, password, first_name, last_name 
+                 FROM user 
+                 WHERE username = ?",
                 [$username]
             );
-
-            if (!$user) {
-                $user = $connection->fetchAssociative(
-                    "SELECT dentistID AS id, username,name, experience, password,specialty,email, 'dentist' AS user_type
-                     FROM dentist WHERE username = ?",
-                    [$username]
-                );
-            }
 
             if (!$user) {
                 return new JsonResponse([
@@ -50,41 +43,47 @@ class LoginAuth extends AbstractController
                 ], 401);
             }
 
+            // Verify password with hasher
+            // if (!$passwordHasher->isPasswordValid(new User(), $password, $user['password'])) {
+            //     return new JsonResponse([
+            //         'status' => "error",
+            //         'message' => "Incorrect username or password."
+            //     ], 401);
+            // }
+            
+            // VERIFY PASS WITHOUT HASHER
             if ($password !== $user['password']) {
-                return new JsonResponse([
-                    'status' => "error",
-                    'message' => "Incorrect username or password."
-                ], 401);
+                        return new JsonResponse([
+                            'status' => "error",
+                            'message' => "Incorrect username or password."
+            ], 401);
             }
-            
-            // Generate new user
-            // $symfonyUser = new User($user['username'], null, [$user['user_type']]);
-            $symfonyUser = new InMemoryUser(
-                           $user['username'],
-                           null,
-                           [$user['user_type']]
+
+            // Fetch roles from `user_role` join table
+            $roles = $connection->fetchFirstColumn(
+                "SELECT r.role_name 
+                 FROM role r
+                 INNER JOIN user_role ur ON r.id = ur.role_id
+                 WHERE ur.user_id = ?",
+                [$user['id']]
             );
-            // token for the user
+
+            // Symfony User object for JWT
+            $symfonyUser = new User($user['username'], null, $roles);
             $token = $jwtManager->create($symfonyUser);
-            
-            
+
             return new JsonResponse([
                 'status' => 'ok',
                 'token' => $token,
                 'user' => [
                     'id' => $user['id'],
                     'username' => $user['username'],
-                    // Handle name fields depending on user type
-                    'firstName' => $user['user_type'] === 'patient' ? $user['first_name'] : $user['name'],
-                    'lastName' => $user['user_type'] === 'patient' ? $user['last_name'] : null,
-                    'email' => $user['email'] ?? null,
-                    'experience' => $user['experience'] ?? null,
-                    'specialty' => $user['specialty'] ?? null,
-                    // use "role" consistently for frontend (always 'patient' or 'dentist')
-                    'role' => $user['user_type'],
+                    'firstName' => $user['first_name'],
+                    'lastName' => $user['last_name'],
+                    'email' => $user['email'],
+                    'roles' => $roles
                 ]
             ], 200);
-
 
         } catch (\Exception $e) {
             return new JsonResponse([
