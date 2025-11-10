@@ -17,14 +17,14 @@ class Appointment
     #[ORM\Column(type: "datetime", options: ["default" => "CURRENT_TIMESTAMP"])]
     private ?\DateTime $appointmentDate = null;
 
-    // 🔗 Relationships
-    #[ORM\ManyToOne(targetEntity: Patient::class, inversedBy: "appointments")]
-    #[ORM\JoinColumn(name: "patient_id", referencedColumnName: "patient_id", nullable: false)]
-    private Patient $patient;
+    // 🔗 Relationships: both patient and dentist now reference User
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: "patient_id", referencedColumnName: "id", nullable: false)]
+    private User $patient;
 
-    #[ORM\ManyToOne(targetEntity: Dentist::class, inversedBy: "appointments")]
-    #[ORM\JoinColumn(name: "dentist_id", referencedColumnName: "dentistID", nullable: false)]
-    private Dentist $dentist;
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: "dentist_id", referencedColumnName: "id", nullable: false)]
+    private User $dentist;
 
     #[ORM\ManyToOne(targetEntity: Schedule::class, inversedBy: "appointments")]
     #[ORM\JoinColumn(name: "schedule_id", referencedColumnName: "scheduleID", nullable: false)]
@@ -36,7 +36,6 @@ class Appointment
     #[ORM\ManyToOne(inversedBy: 'appointments')]
     private ?AppointmentType $appointmentType = null;
 
-   
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $userSetDate = null;
 
@@ -49,8 +48,56 @@ class Appointment
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTime $deletedOn = null;
 
+    // 🔹 Getters & Setters
 
-    // getters and setters...
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getAppointmentDate(): ?\DateTime
+    {
+        return $this->appointmentDate;
+    }
+
+    public function setAppointmentDate(\DateTime $appointmentDate): static
+    {
+        $this->appointmentDate = $appointmentDate;
+        return $this;
+    }
+
+    public function getPatient(): User
+    {
+        return $this->patient;
+    }
+
+    public function setPatient(User $patient): static
+    {
+        $this->patient = $patient;
+        return $this;
+    }
+
+    public function getDentist(): User
+    {
+        return $this->dentist;
+    }
+
+    public function setDentist(User $dentist): static
+    {
+        $this->dentist = $dentist;
+        return $this;
+    }
+
+    public function getSchedule(): Schedule
+    {
+        return $this->schedule;
+    }
+
+    public function setSchedule(Schedule $schedule): static
+    {
+        $this->schedule = $schedule;
+        return $this;
+    }
 
     public function isEmergency(): ?bool
     {
@@ -60,7 +107,6 @@ class Appointment
     public function setEmergency(?bool $Emergency): static
     {
         $this->Emergency = $Emergency;
-
         return $this;
     }
 
@@ -72,11 +118,8 @@ class Appointment
     public function setAppointmentType(?AppointmentType $appointmentType): static
     {
         $this->appointmentType = $appointmentType;
-
         return $this;
     }
-
-   
 
     public function getUserSetDate(): ?string
     {
@@ -86,7 +129,6 @@ class Appointment
     public function setUserSetDate(?string $userSetDate): static
     {
         $this->userSetDate = $userSetDate;
-
         return $this;
     }
 
@@ -98,7 +140,6 @@ class Appointment
     public function setStatus(?string $Status): static
     {
         $this->Status = $Status;
-
         return $this;
     }
 
@@ -110,7 +151,6 @@ class Appointment
     public function setMessage(?string $message): static
     {
         $this->message = $message;
-
         return $this;
     }
 
@@ -118,11 +158,10 @@ class Appointment
     {
         return $this->deletedOn;
     }
-    
-    public function setDeletedOn(?\DateTime $deletedOn): self
+
+    public function setDeletedOn(?\DateTime $deletedOn): static
     {
         $this->deletedOn = $deletedOn;
         return $this;
     }
-
 }
