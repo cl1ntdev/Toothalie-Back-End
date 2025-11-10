@@ -9,10 +9,13 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\DBAL\Connection;
 
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\Security\Core\User\InMemoryUser;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class LoginAuth extends AbstractController
 {
     #[Route('/api/login-auth', name: "login-auth", methods: ['POST'])]
-    public function doGetUser(Request $req, Connection $connection): JsonResponse
+    public function doGetUser(Request $req, Connection $connection, JWTTokenManagerInterface $jwtManager): JsonResponse
     {
         try {
             $userInput = json_decode($req->getContent(), true);
@@ -53,9 +56,21 @@ class LoginAuth extends AbstractController
                     'message' => "Incorrect username or password."
                 ], 401);
             }
-
+            
+            // Generate new user
+            // $symfonyUser = new User($user['username'], null, [$user['user_type']]);
+            $symfonyUser = new InMemoryUser(
+                           $user['username'],
+                           null,
+                           [$user['user_type']]
+            );
+            // token for the user
+            $token = $jwtManager->create($symfonyUser);
+            
+            
             return new JsonResponse([
                 'status' => 'ok',
+                'token' => $token,
                 'user' => [
                     'id' => $user['id'],
                     'username' => $user['username'],
