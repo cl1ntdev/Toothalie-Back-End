@@ -83,7 +83,7 @@ class GetDentists extends AbstractController {
 
             // Fetch dentist's schedules
             $schedule = $con->fetchAllAssociative(
-                "SELECT day_of_week, time_slot FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
+                "SELECT scheduleID, day_of_week, time_slot FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
                 [$dentistID]
             );
 
