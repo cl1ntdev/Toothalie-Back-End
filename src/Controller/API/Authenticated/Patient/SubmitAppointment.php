@@ -75,7 +75,7 @@ class SubmitAppointment extends AbstractController
             $appointmentID = $connection->lastInsertId();
             $connection->insert('appointment_log', [
                            'appointment_id' => $appointmentID,
-                           'actor_type' => 'patient',
+                           'actor_type' => 'PATIENT',
                            'action' => 'create',
                            'message' => 'Created a new appointment request.',
                            'snapshot' => json_encode([
