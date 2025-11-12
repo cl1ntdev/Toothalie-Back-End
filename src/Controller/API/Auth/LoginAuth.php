@@ -62,9 +62,9 @@ class LoginAuth extends AbstractController
             // Fetch roles from `user_role` join table
             $roles = $connection->fetchFirstColumn(
                 "SELECT r.role_name 
-                 FROM role r
-                 INNER JOIN user_role ur ON r.id = ur.role_id
-                 WHERE ur.user_id = ?",
+                FROM role r
+                INNER JOIN user_role ur ON r.id = ur.role_id
+                WHERE ur.user_id = ?",
                 [$user['id']]
             );
 
