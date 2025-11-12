@@ -13,40 +13,58 @@ class UpdateAppointment extends AbstractController
     #[Route('/api/edit-appointment-dentist', name: "edit-appointment-dentist", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
-        // >> >> >> << << << 
-        // 
-        // Returns boolean for checking status if it is successful or not
-        // 
-        // >> >> >> << << << 
         try {
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointment_id'] ?? null;
-            $status = $data['status'];
-            
-            
-            if (!$appointmentID) {
+            $status = $data['status'] ?? null;
+
+            if (!$appointmentID || !$status) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => 'Missing appointmentid'
+                    'message' => 'Missing required fields: appointment_id or status'
                 ], 400);
             }
 
+            // 🔹 Fetch current appointment snapshot before update
+            $appointment = $connection->fetchAssociative(
+                'SELECT * FROM appointment WHERE appointment_id = ?',
+                [$appointmentID]
+            );
+
+            if (!$appointment) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'Appointment not found',
+                ], 404);
+            }
+
+            // 🔹 Update the appointment status
             $update = $connection->update(
-                "appointment",
+                'appointment',
                 ['status' => $status],
                 ['appointment_id' => $appointmentID]
             );
-            
 
-          
+            // 🔹 Insert a log entry
+            $connection->insert('appointment_log', [
+                'appointment_id' => $appointmentID,
+                'logged_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'actor_type' => 'DENTIST',
+                'action' => 'Status Updated',
+                'message' => "Status changed from '{$appointment['status']}' to '{$status}'",
+                'snapshot' => json_encode($appointment),
+            ]);
+
             return new JsonResponse([
                 'status' => 'ok',
-                'update_status' => $update 
+                'update_status' => $update,
+                'message' => 'Appointment updated and logged successfully'
             ]);
+
         } catch (\Exception $e) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => $e->getMessage(),
+                'message' => 'Failed: ' . $e->getMessage(),
             ], 500);
         }
     }
