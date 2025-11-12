@@ -16,33 +16,42 @@ final class GetHistory extends AbstractController
     {
         try {
             $data = json_decode($request->getContent(), true);
-            $patientID = $data['patientID'] ?? null;
+            $userID = $data['userID'] ?? null;
+            $role = strtoupper(trim($data['role'] ?? ''));
 
-            if (!$patientID) {
+            if (!$userID || !$role) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => 'Missing required parameter: patientID',
+                    'message' => 'Missing required parameters: userID or role',
                 ], 400);
             }
 
-            //Get all appointment IDs for this patient
-            $appointmentIDs = $connection->fetchFirstColumn(
-                "SELECT appointment_id FROM appointment WHERE patient_id = ?",
-                // "SELECT appointment_id FROM appointment WHERE patient_id = ? AND deleted_on IS NULL",
-                [$patientID]
-            );
+            // Step 1: Get all appointment IDs for this user depending on their role
+            $queryBase = match ($role) {
+                'DENTIST' => 'SELECT appointment_id FROM appointment WHERE dentist_id = ? AND deleted_on IS NULL',
+                'PATIENT' => 'SELECT appointment_id FROM appointment WHERE patient_id = ? AND deleted_on IS NULL',
+                default => null,
+            };
+
+            if (!$queryBase) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'Invalid role provided',
+                ], 400);
+            }
+
+            $appointmentIDs = $connection->fetchFirstColumn($queryBase, [$userID]);
 
             if (empty($appointmentIDs)) {
                 return new JsonResponse([
                     'status' => 'ok',
-                    'message' => 'No appointments found for this patient',
+                    'message' => 'No appointments found for this user',
                     'data' => []
                 ]);
             }
 
-            //  Fetch all logs related to those appointments
-            $logs = $connection->fetchAllAssociative(
-                "SELECT 
+            $logQuery = '
+                SELECT 
                     al.*, 
                     a.patient_id, 
                     a.dentist_id, 
@@ -51,10 +60,30 @@ final class GetHistory extends AbstractController
                 FROM appointment_log al
                 JOIN appointment a ON a.appointment_id = al.appointment_id
                 WHERE al.appointment_id IN (?)
-                ORDER BY al.logged_at DESC",
-                [$appointmentIDs],
-                [ArrayParameterType::INTEGER]
+            ';
+            
+            if ($role === 'DENTIST') {
+                // Only logs made by the dentist themselves
+                $logQuery .= ' AND al.actor_type = ? AND a.dentist_id = ? ORDER BY al.logged_at DESC';
+                
+                $logs = $connection->fetchAllAssociative(
+                    $logQuery,
+                    [$appointmentIDs, 'DENTIST', $userID], // first is array for IN(?)
+                    [ArrayParameterType::INTEGER] // only the array
                 );
+            
+            } else { // PATIENT
+                // All logs for the patient's appointments
+                $logQuery .= ' AND a.patient_id = ? ORDER BY al.logged_at DESC';
+                
+                $logs = $connection->fetchAllAssociative(
+                    $logQuery,
+                    [$appointmentIDs, $userID],
+                    [ArrayParameterType::INTEGER]
+                );
+            }
+
+
 
             return new JsonResponse([
                 'status' => 'ok',
