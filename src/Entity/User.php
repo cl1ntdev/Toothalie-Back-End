@@ -45,9 +45,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: UserRole::class, mappedBy: 'User')]
     private Collection $userRoles;
 
+    /**
+     * @var Collection<int, DentistService>
+     */
+    #[ORM\OneToMany(targetEntity: DentistService::class, mappedBy: 'User')]
+    private Collection $dentistServices;
+
     public function __construct()
     {
         $this->userRoles = new ArrayCollection();
+        $this->dentistServices = new ArrayCollection();
     }
 
     // ---------- Getters and Setters ----------
@@ -169,6 +176,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->userRoles->removeElement($userRole)) {
             $userRole->removeUser($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DentistService>
+     */
+    public function getDentistServices(): Collection
+    {
+        return $this->dentistServices;
+    }
+
+    public function addDentistService(DentistService $dentistService): static
+    {
+        if (!$this->dentistServices->contains($dentistService)) {
+            $this->dentistServices->add($dentistService);
+            $dentistService->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDentistService(DentistService $dentistService): static
+    {
+        if ($this->dentistServices->removeElement($dentistService)) {
+            // set the owning side to null (unless already changed)
+            if ($dentistService->getUser() === $this) {
+                $dentistService->setUser(null);
+            }
         }
 
         return $this;
