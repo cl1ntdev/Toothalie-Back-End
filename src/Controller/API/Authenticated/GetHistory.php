@@ -21,12 +21,11 @@ final class GetHistory extends AbstractController
 
             $queryBase = "";
             
-            switch($role){
-                case "DENTIST":
-                    $queryBase = "SELECT appointment_id FROM appointment WHERE dentist_id = ?";
-                case "PATIENT":
-                    $queryBase = "SELECT appointment_id FROM appointment WHERE patient_id = ?";
-            }
+            $queryBase = match ($role) {
+                'DENTIST' => "SELECT appointment_id FROM appointment WHERE dentist_id = ?",
+                'PATIENT' => "SELECT appointment_id FROM appointment WHERE patient_id = ?",
+                default   => null,
+            };
 
             if (!$userID) {
                 return new JsonResponse([
@@ -38,12 +37,12 @@ final class GetHistory extends AbstractController
             // patient_id and dentist_id
             
             //Get all appointment IDs for this patient
-            $appointmentIDs = $connection->fetchFirstColumn(
+            $ids = $connection->fetchAllAssociative(
                 $queryBase,
                 // "SELECT appointment_id FROM appointment WHERE patient_id = ? AND deleted_on IS NULL",
                 [$userID]
             );
-            
+            $appointmentIDs = array_column($ids, 'appointment_id');
 
             if (empty($appointmentIDs)) {
                 return new JsonResponse([
@@ -70,6 +69,13 @@ final class GetHistory extends AbstractController
                 );
 
             return new JsonResponse([
+            // for testing
+                // 'query' => $queryBase,
+                // 'userID' => $userID,
+                // 'role' => $role,
+                // 'appointmentID' => $appointmentIDs,
+                
+                //
                 'status' => 'ok',
                 'count' => count($logs),
                 'data' => $logs
