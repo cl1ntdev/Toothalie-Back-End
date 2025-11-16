@@ -28,6 +28,12 @@ class GetDentists extends AbstractController {
                     "SELECT day_of_week, time_slot FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
                     [$dentist['id']]
                 );
+                $dentistServices = $connection->fetchAllAssociative(
+                    "SELECT s.id as serviceID, s.name as serviceName, se.id as serviceTypeID, se.name as serviceTypeName from service s 
+                    join dentist_service d on d.service_id = s.id 
+                    join service_type se on se.id = s.service_type_id where d.user_id = ? ",
+                    [$dentist['id']]
+                );
 
                 // Group schedules by day
                 $grouped = [];
@@ -36,6 +42,7 @@ class GetDentists extends AbstractController {
                 }
 
                 $dentist['schedule'] = $grouped;
+                $dentist['services'] = $dentistServices;
             }
 
             return new JsonResponse([
