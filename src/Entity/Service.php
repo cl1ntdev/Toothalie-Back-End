@@ -22,6 +22,9 @@ class Service
     #[ORM\JoinColumn(nullable: false)]
     private ?ServiceType $serviceType = null;
 
+    #[ORM\OneToMany(mappedBy: 'Service', targetEntity: Appointment::class)]
+    private Collection $appointments;
+
     /**
      * @var Collection<int, DentistService>
      */
@@ -30,6 +33,7 @@ class Service
 
     public function __construct()
     {
+        $this->appointments = new ArrayCollection();
         $this->dentistServices = new ArrayCollection();
     }
 
@@ -61,6 +65,33 @@ class Service
     }
 
     /**
+     * @return Collection<int, Appointment>
+     */
+    public function getAppointments(): Collection
+    {
+        return $this->appointments;
+    }
+
+    public function addAppointment(Appointment $appointment): static
+    {
+        if (!$this->appointments->contains($appointment)) {
+            $this->appointments->add($appointment);
+            $appointment->setService($this);
+        }
+        return $this;
+    }
+
+    public function removeAppointment(Appointment $appointment): static
+    {
+        if ($this->appointments->removeElement($appointment)) {
+            if ($appointment->getService() === $this) {
+                $appointment->setService(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
      * @return Collection<int, DentistService>
      */
     public function getDentistServices(): Collection
@@ -74,7 +105,6 @@ class Service
             $this->dentistServices->add($dentistService);
             $dentistService->addService($this);
         }
-
         return $this;
     }
 
@@ -83,7 +113,6 @@ class Service
         if ($this->dentistServices->removeElement($dentistService)) {
             $dentistService->removeService($this);
         }
-
         return $this;
     }
 }

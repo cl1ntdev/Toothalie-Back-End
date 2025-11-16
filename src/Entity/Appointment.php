@@ -14,10 +14,9 @@ class Appointment
     #[ORM\Column(name: "appointment_id", type: "integer")]
     private ?int $id = null;
 
-    #[ORM\Column(type: "datetime", options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
     private ?\DateTime $appointmentDate = null;
 
-    // 🔗 Relationships: both patient and dentist now reference User
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: "patient_id", referencedColumnName: "id", nullable: false)]
     private User $patient;
@@ -48,7 +47,12 @@ class Appointment
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTime $deletedOn = null;
 
-    // 🔹 Getters & Setters
+    // 🔹 Correct relation to Service
+    #[ORM\ManyToOne(targetEntity: Service::class, inversedBy: 'appointments')]
+    #[ORM\JoinColumn(name: "service_id", referencedColumnName: "id", nullable: true)]
+    private ?Service $service = null;
+
+    // Getters & Setters
 
     public function getId(): ?int
     {
@@ -162,6 +166,17 @@ class Appointment
     public function setDeletedOn(?\DateTime $deletedOn): static
     {
         $this->deletedOn = $deletedOn;
+        return $this;
+    }
+
+    public function getService(): ?Service
+    {
+        return $this->Service;
+    }
+
+    public function setService(?Service $Service): static
+    {
+        $this->Service = $Service;
         return $this;
     }
 }
