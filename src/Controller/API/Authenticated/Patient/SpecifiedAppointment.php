@@ -42,7 +42,7 @@ class SpecifiedAppointment extends AbstractController
             }
 
             $dentist = $connection->fetchAssociative(
-                "SELECT * FROM dentist WHERE dentistID = ?",
+                "SELECT * FROM user WHERE id = ?",
                 [$appointment['dentist_id']]
             );
 
