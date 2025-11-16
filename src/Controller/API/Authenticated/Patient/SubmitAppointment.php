@@ -32,6 +32,7 @@ class SubmitAppointment extends AbstractController
             $dentistID = $data['dentistID'];
             $day = $data['day'];
             $time = $data['time'];
+            $serviceID = $data['serviceID'];
             
             
             $emergency=$data['emergency'];
@@ -68,8 +69,8 @@ class SubmitAppointment extends AbstractController
                 'appointment_type_id'=> $setAppointmentType,
                 'user_set_date'=> $setDate,
                 'status'=>$status,
-                'message'=>$message
-                 
+                'message'=>$message,
+                'service_id' => $serviceID
             ]);
             
             $appointmentID = $connection->lastInsertId();
@@ -86,7 +87,8 @@ class SubmitAppointment extends AbstractController
                                'appointment_type_id' => $setAppointmentType,
                                'user_set_date' => $setDate,
                                'status' => $status,
-                               'message' => $message
+                               'message' => $message,
+                               'service_id' => $serviceID
                            ]),
                            'logged_at' => (new \DateTime())->format('Y-m-d H:i:s')
             ]);
