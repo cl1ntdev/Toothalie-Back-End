@@ -32,8 +32,6 @@ class EditSettings extends AbstractController
                 );
             }
 
-            // NOTE: The dentistID should ideally be passed as a route or query parameter
-            // to handle cases where the schedule array is empty (e.g., deleting all schedules).
             if (!$dentistID && !empty($schedules)) {
                 $dentistID = $schedules[0]["dentistID"] ?? null;
             }
@@ -183,4 +181,73 @@ class EditSettings extends AbstractController
             );
         }
     }
+    
+    #[Route('/api/edit-services', name: '/api/edit-services', methods: ['POST'])]
+    public function editServices(Request $request, Connection $connection): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+    
+        if (!$data || !isset($data['userID'], $data['payload'])) {
+            return new JsonResponse(['error' => 'Invalid request'], 400);
+        }
+    
+        $userID = (int) $data['userID'];
+        $payload = $data['payload']; // new list of services user should have
+    
+        try {
+            $connection->beginTransaction();
+    
+            // Fetch CURRENT dentist services from DB
+            $existing = $connection->fetchFirstColumn(
+                "SELECT service_id FROM dentist_service WHERE user_id = ?",
+                [$userID]
+            );
+    
+            $existing = array_map('intval', $existing);
+    
+            // Extract NEW service IDs from payload
+            $newServiceIds = array_map(fn ($item) => (int)$item['service_id'], $payload);
+    
+            // Remove duplicates just in case
+            $newServiceIds = array_unique($newServiceIds);
+    
+            // Determine INSERTS & DELETES
+            $toInsert = array_diff($newServiceIds, $existing);
+            $toDelete = array_diff($existing, $newServiceIds);
+    
+            //  Perform INSERTS
+            foreach ($toInsert as $serviceID) {
+                $connection->insert('dentist_service', [
+                    'user_id' => $userID,
+                    'service_id' => $serviceID
+                ]);
+            }
+    
+            //  Perform DELETES
+            foreach ($toDelete as $serviceID) {
+                $connection->delete('dentist_service', [
+                    'user_id' => $userID,
+                    'service_id' => $serviceID
+                ]);
+            }
+    
+            // Commit changes
+            $connection->commit();
+    
+            return new JsonResponse([
+                'status' => 'success',
+                'added' => array_values($toInsert),
+                'removed' => array_values($toDelete),
+                'finalServices' => $newServiceIds
+            ]);
+    
+        } catch (\Throwable $e) {
+            $connection->rollBack();
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
