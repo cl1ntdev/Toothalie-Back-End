@@ -25,4 +25,21 @@ final class GetServices extends AbstractController {
         ]);
         
     }
+    
+    #[Route('/api/get-dentist-service', methods:['POST'], name:'get-dentist-service')]
+    public function getDentistServices(Request $request, Connection $connection){
+        $data = json_decode($request->getContent(), true);
+        $userID = $data['userID'];
+
+        $dentistService = $connection->fetchAllAssociative(
+            'SELECT * from dentist_service where user_id = ?',
+            [$userID]
+        );
+
+        return new JsonResponse([
+            'dentistServices' => $dentistService
+        ]);
+        
+    }
+    
 }
