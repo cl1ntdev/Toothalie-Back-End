@@ -13,28 +13,31 @@ use App\Entity\User;
 
 class LoginAuth extends AbstractController
 {
-    #[Route('/api/login-auth', name: "login-auth", methods: ['POST'])]
-    public function doGetUser(Request $req, Connection $connection, JWTTokenManagerInterface $jwtManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
-    {
+    #[Route("/api/login-auth", name: "login-auth", methods: ["POST"])]
+    public function doGetUser(
+        Request $req,
+        Connection $connection,
+        JWTTokenManagerInterface $jwtManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
         try {
             $userInput = json_decode($req->getContent(), true);
-            $username = $userInput['username'] ?? null;
-            $password = $userInput['password'] ?? null;
+            $username = $userInput["username"] ?? null;
+            $password = $userInput["password"] ?? null;
 
             if (!$username || !$password) {
                 return new JsonResponse([
-                    'status' => 'error',
-                    'message' => 'Username and password are required.'
+                    "status" => "error",
+                    "message" => "Username and password are required."
                 ], 400);
             }
 
-            // Fetch user info from `user` table
-            $user = $connection->fetchAssociative(
-                "SELECT id, username, email, password, first_name, last_name 
-                 FROM user 
-                 WHERE username = ?",
-                [$username]
-            );
+            // Fetch user info from DB
+            $user = $connection->fetchAssociative("
+                SELECT id, username, email, password, first_name, last_name
+                FROM user
+                WHERE username = ?
+            ", [$username]);
 
             if (!$user) {
                 return new JsonResponse([
@@ -43,52 +46,48 @@ class LoginAuth extends AbstractController
                 ], 401);
             }
 
-            // Verify password with hasher
-            // if (!$passwordHasher->isPasswordValid(new User(), $password, $user['password'])) {
-            //     return new JsonResponse([
-            //         'status' => "error",
-            //         'message' => "Incorrect username or password."
-            //     ], 401);
-            // }
-            
-            // VERIFY PASS WITHOUT HASHER
-            if ($password !== $user['password']) {
-                        return new JsonResponse([
-                            'status' => "error",
-                            'message' => "Incorrect username or password."
-            ], 401);
+            // Verify password using Symfony hasher
+            $dummyUser = new User();
+            $dummyUser->setPassword($user['password']); // set hashed password from DB
+            if (!$passwordHasher->isPasswordValid($dummyUser, $password)) {
+                return new JsonResponse([
+                    'status' => "error",
+                    'message' => "Incorrect username or password."
+                ], 401);
             }
 
-            // Fetch roles from `user_role` join table
-            $roles = $connection->fetchFirstColumn(
-                "SELECT r.role_name 
+            // Fetch roles
+            $roles = $connection->fetchFirstColumn("
+                SELECT r.role_name
                 FROM role r
                 INNER JOIN user_role ur ON r.id = ur.role_id
-                WHERE ur.user_id = ?",
-                [$user['id']]
-            );
+                WHERE ur.user_id = ?
+            ", [$user['id']]);
 
-            // Symfony User object for JWT
-            $symfonyUser = new User($user['username'], null, $roles);
+            // Create a dummy Symfony User object for JWT
+            $symfonyUser = new User();
+            $symfonyUser->setUsername($user['username']);
+            $symfonyUser->setRoles($roles);
+
             $token = $jwtManager->create($symfonyUser);
 
             return new JsonResponse([
-                'status' => 'ok',
-                'token' => $token,
-                'user' => [
-                    'id' => $user['id'],
-                    'username' => $user['username'],
-                    'firstName' => $user['first_name'],
-                    'lastName' => $user['last_name'],
-                    'email' => $user['email'],
-                    'roles' => $roles
-                ]
+                // "status" => "ok",
+                "token" => $token, // specifically only this will be returnd
+                // "user" => [
+                //     "id" => $user['id'],
+                //     "username" => $user['username'],
+                //     "firstName" => $user['first_name'],
+                //     "lastName" => $user['last_name'],
+                //     "email" => $user['email'],
+                //     "roles" => $roles
+                // ],
             ], 200);
 
         } catch (\Exception $e) {
             return new JsonResponse([
-                'status' => 'error',
-                'message' => 'Login failed: ' . $e->getMessage()
+                "status" => "error",
+                "message" => "Login failed: " . $e->getMessage()
             ], 500);
         }
     }
