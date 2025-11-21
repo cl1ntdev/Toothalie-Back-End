@@ -2,42 +2,29 @@
 namespace App\Controller\API\Authenticated;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\DBAL\Connection;
+use App\Entity\User;
 
 class GetUserInfo extends AbstractController 
 {
-    #[Route('/api/get-user-info', name:'get-user-info', methods:['POST'])]
-    public function getUserInfo(Request $req, Connection $conn): JsonResponse
+    #[Route('/api/get-user-info', name: 'get-user-info', methods: ['GET'])]
+    public function getUserInfo(Connection $conn): JsonResponse
     {
-        $data = json_decode($req->getContent(), true);
-        $id = $data['id'] ?? null;
+        /** @var User|null $user */
+        $user = $this->getUser();
 
-        if (!$id) {
+        if (!$user instanceof User) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'User ID is required.'
-            ], 400);
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
-        // Fetch user info from `user` table
-        $userInfo = $conn->fetchAssociative(
-            "SELECT id, username, first_name, last_name, email, created_at 
-             FROM user 
-             WHERE id = ?",
-            [$id]
-        );
+        $id = $user->getId();
 
-        if (!$userInfo) {
-            return new JsonResponse([
-                'status' => "error",
-                'message' => "No user found."
-            ], 404);
-        }
-
-        // Fetch roles from `user_role` join table
+        // Fetch roles
         $roles = $conn->fetchFirstColumn(
             "SELECT r.role_name 
              FROM role r
@@ -46,16 +33,14 @@ class GetUserInfo extends AbstractController
             [$id]
         );
 
-        // Return user info along with roles
         return new JsonResponse([
             'status' => 'ok',
             'user' => [
-                'id' => $userInfo['id'],
-                'username' => $userInfo['username'],
-                'firstName' => $userInfo['first_name'],
-                'lastName' => $userInfo['last_name'],
-                'email' => $userInfo['email'],
-                'createdAt' => $userInfo['created_at'],
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'email' => $user->getEmail(),
                 'roles' => $roles
             ]
         ]);
