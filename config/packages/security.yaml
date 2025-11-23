@@ -64,8 +64,7 @@ security:
         - { path: ^/api/auth/me, roles: [IS_AUTHENTICATED_FULLY] }
         - { path: ^/api/auth-user-info, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/get-login-user, roles: IS_AUTHENTICATED_FULLY }
-
-        # - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
         # - { path: ^/api/get-user-info, roles: ROLE_USER }
         # - { path: ^/admin, roles: ROLE_ADMIN }
