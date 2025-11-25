@@ -19,16 +19,20 @@ class SubmitAppointment extends AbstractController
     public function addAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
+            // authenticated user
+            $user = $this->getUser() ;
+            
             $data = json_decode($req->getContent(), true);
 
-            if (!$data || !isset($data['patientID'], $data['dentistID'], $data['day'], $data['time'])) {
+            if (!$data || !isset($data['dentistID'], $data['day'], $data['time'])) {
                 return new JsonResponse([
                     'status' => 'error',
                     'message' => 'Missing required fields: patientID, dentistID, day, time'
                 ], 400);
             }
 
-            $patientID = $data['patientID'];
+            $patientIDBase = $user->getId();
+            $patientID = $patientIDBase;
             $dentistID = $data['dentistID'];
             $day = $data['day'];
             $time = $data['time'];
