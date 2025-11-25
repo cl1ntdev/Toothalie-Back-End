@@ -3,53 +3,54 @@
 namespace App\Controller\API\Authenticated\Patient;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
 
 class AppointmentDetails extends AbstractController
 {
-    // Returns all appointments made by the user
-    #[Route('/api/get-appointment', name: "get-appointment", methods: ['POST'])]
-    public function getAppointment(Request $req, Connection $connection): JsonResponse
+    #[Route('/api/get-appointment', name: "get_appointment", methods: ['GET'])]
+    public function getAppointment(Connection $connection): JsonResponse
     {
         try {
-            $data = json_decode($req->getContent(), true);
-            $userID = $data['userID'] ?? null;
 
-            if (!$userID) {
+            $user = $this->getUser();
+            if (!$user) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => 'Missing userID'
-                ], 400);
+                    'message' => 'Unauthorized'
+                ], 401);
             }
 
-            // Fetch all appointments for the patient
+            $userID = $user->getId();
+
             $appointments = $connection->fetchAllAssociative(
-                "SELECT * FROM appointment WHERE patient_id = ? AND deleted_on IS NULL ORDER BY appointment_id DESC",
+                "SELECT * FROM appointment 
+                 WHERE patient_id = ? AND deleted_on IS NULL 
+                 ORDER BY appointment_id DESC",
                 [$userID]
             );
 
             if (!$appointments) {
                 return new JsonResponse([
-                    'status' => 'error',
-                    'message' => 'No appointments found for this user'
-                ], 404);
+                    'status' => 'ok',
+                    'appointments' => []
+                ]);
             }
 
             $results = [];
             foreach ($appointments as $appointment) {
-                // Dentist info from the unified User table
+
                 $dentist = $connection->fetchAssociative(
                     "SELECT id, username, first_name, last_name, email, roles 
                      FROM user WHERE id = ?",
                     [$appointment['dentist_id']]
                 );
 
-                // Dentist schedule
                 $schedules = $connection->fetchAllAssociative(
-                    "SELECT * FROM schedule WHERE dentistID = ? ORDER BY day_of_week, time_slot",
+                    "SELECT * FROM schedule 
+                     WHERE dentistID = ? 
+                     ORDER BY day_of_week, time_slot",
                     [$appointment['dentist_id']]
                 );
 
@@ -64,6 +65,7 @@ class AppointmentDetails extends AbstractController
                 'status' => 'ok',
                 'appointments' => $results
             ]);
+
         } catch (\Exception $e) {
             return new JsonResponse([
                 'status' => 'error',
