@@ -57,7 +57,7 @@ security:
         # - { path: ^/dashboard, roles: ROLE_USER}
 
         # # public access
-        # - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
         # - { path: ^/api/login-auth, roles: PUBLIC_ACCESS }
 
         #  # protected
