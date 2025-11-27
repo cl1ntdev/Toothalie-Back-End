@@ -21,9 +21,11 @@ class EditSettings extends AbstractController
     {
         $conn->beginTransaction();
         try {
+            $user = $this->getUser();
+            $dentistID = $user->getId();
+
             $data = json_decode($req->getContent(), true);
             $schedules = $data['schedules'];
-            $dentistID = $data['dentistID'];
 
             if ($schedules === null) {
                 return new JsonResponse(
@@ -185,14 +187,15 @@ class EditSettings extends AbstractController
     #[Route('/api/edit-services', name: '/api/edit-services', methods: ['POST'])]
     public function editServices(Request $request, Connection $connection): JsonResponse
     {
+        $user = $this->getUser();
+        $userID = $user->getId();
         $data = json_decode($request->getContent(), true);
     
-        if (!$data || !isset($data['userID'], $data['payload'])) {
+        if (!$data || !isset($data['payload'])) {
             return new JsonResponse(['error' => 'Invalid request'], 400);
         }
     
-        $userID = (int) $data['userID'];
-        $payload = $data['payload']; // new list of services user should have
+        $payload = $data['payload'];
     
         try {
             $connection->beginTransaction();
