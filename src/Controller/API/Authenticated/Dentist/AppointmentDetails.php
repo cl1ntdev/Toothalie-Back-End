@@ -10,13 +10,13 @@ use Doctrine\DBAL\Connection;
 
 class AppointmentDetails extends AbstractController
 {
-    #[Route('/api/get-appointment-dentist', name: "get-appointment-dentist", methods: ['POST'])]
+    #[Route('/api/get-appointment-dentist', name: "get-appointment-dentist", methods: ['GET'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
         try {
-            $data = json_decode($req->getContent(), true);
-            $dentistID = $data['dentistID'] ?? null;
 
+            $user = $this->getUser();
+            $dentistID = $user->getId();
             if (!$dentistID) {
                 return new JsonResponse([
                     'status' => 'error',
@@ -24,7 +24,7 @@ class AppointmentDetails extends AbstractController
                 ], 400);
             }
 
-            // Fetch all appointments assigned to this dentist
+            //Fetch all appointments assigned to this dentist
             $appointments = $connection->fetchAllAssociative(
                 "SELECT * FROM appointment 
                  WHERE dentist_id = ? AND deleted_on IS NULL 
@@ -42,7 +42,7 @@ class AppointmentDetails extends AbstractController
             $results = [];
             foreach ($appointments as $appointment) {
 
-                // Fetch the patient details
+                //Fetch the patient details
                 $patient = $connection->fetchAssociative(
                     "SELECT id, username, first_name, last_name, email 
                      FROM user 
@@ -50,7 +50,7 @@ class AppointmentDetails extends AbstractController
                     [$appointment['patient_id']]
                 );
 
-                // Fetch patient roles
+                //Fetch patient roles
                 $patientRoles = $connection->fetchAllAssociative(
                     "SELECT r.role_name 
                      FROM user_role ur
@@ -59,7 +59,7 @@ class AppointmentDetails extends AbstractController
                     [$appointment['patient_id']]
                 );
 
-                // Fetch schedule details
+                //Fetch schedule details
                 $schedule = $connection->fetchAssociative(
                     "SELECT scheduleID, day_of_week, time_slot 
                      FROM schedule 
@@ -67,7 +67,7 @@ class AppointmentDetails extends AbstractController
                     [$appointment['schedule_id']]
                 );
 
-                // Fetch dentist info + roles
+                //Fetch dentist info + roles
                 $dentist = $connection->fetchAssociative(
                     "SELECT id, username, first_name, last_name, email 
                      FROM user 
