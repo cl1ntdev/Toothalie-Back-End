@@ -18,6 +18,7 @@ class SubmitAppointment extends AbstractController
     #[Route('/api/add-appointment', name: "add-appointment", methods: ['POST'])]
     public function addAppointment(Request $req, Connection $connection): JsonResponse
     {
+        date_default_timezone_set('Asia/Manila');
         try {
             // authenticated user
             $user = $this->getUser() ;
