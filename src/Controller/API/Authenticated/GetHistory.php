@@ -24,8 +24,10 @@ final class GetHistory extends AbstractController
             $queryBase = match ($role) {
                 'DENTIST' => "SELECT appointment_id FROM appointment WHERE dentist_id = ?",
                 'PATIENT' => "SELECT appointment_id FROM appointment WHERE patient_id = ?",
+                
                 default   => null,
             };
+            
 
             if (!$userID) {
                 return new JsonResponse([
@@ -52,19 +54,72 @@ final class GetHistory extends AbstractController
                 ]);
             }
 
+            $roleQuery = match ($role) {
+                'DENTIST' => "
+                    SELECT 
+                        al.*, 
+                        a.patient_id, 
+                        a.dentist_id, 
+                        a.status, 
+                        a.user_set_date,
+                
+                        -- Dentist Name
+                        dentist.first_name AS dentist_first_name,
+                        dentist.last_name AS dentist_last_name,
+                
+                        -- Patient Name
+                        patient.first_name AS patient_first_name,
+                        patient.last_name AS patient_last_name
+                
+                    FROM appointment_log al
+                    JOIN appointment a ON a.appointment_id = al.appointment_id
+                
+                    -- Join dentist user
+                    JOIN user dentist ON dentist.id = a.dentist_id
+                
+                    -- Join patient user
+                    JOIN user patient ON patient.id = a.patient_id
+                
+                    WHERE al.appointment_id IN (?)
+                    ORDER BY al.logged_at DESC
+                ",
+                'PATIENT' => "
+                    SELECT 
+                        al.*, 
+                        a.patient_id, 
+                        a.dentist_id, 
+                        a.status, 
+                        a.user_set_date,
+                
+                        -- Dentist Name
+                        dentist.first_name AS dentist_first_name,
+                        dentist.last_name AS dentist_last_name,
+                
+                        -- Patient Name
+                        patient.first_name AS patient_first_name,
+                        patient.last_name AS patient_last_name
+                
+                    FROM appointment_log al
+                    JOIN appointment a ON a.appointment_id = al.appointment_id
+                
+                    -- Join dentist user
+                    JOIN user dentist ON dentist.id = a.dentist_id
+                
+                    -- Join patient user
+                    JOIN user patient ON patient.id = a.patient_id
+                
+                    WHERE al.appointment_id IN (?)
+                    ORDER BY al.logged_at DESC
+                ",
+
+                default => null
+            };
+
             //  Fetch all logs related to those appointments
             $logs = $connection->fetchAllAssociative(
-                "SELECT 
-                    al.*, 
-                    a.patient_id, 
-                    a.dentist_id, 
-                    a.status, 
-                    a.user_set_date
-                FROM appointment_log al
-                JOIN appointment a ON a.appointment_id = al.appointment_id
-                WHERE al.appointment_id IN (?) and al.actor_type = (?)
-                ORDER BY al.logged_at DESC",
-                [$appointmentIDs,$role],
+                $roleQuery,
+                // [$appointmentIDs,$role],
+                [$appointmentIDs],
                 [ArrayParameterType::INTEGER]
                 );
 
