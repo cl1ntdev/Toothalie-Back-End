@@ -18,6 +18,7 @@ class DeleteAppointmentAPI extends AbstractController
     #[Route('/api/delete-appointment', name: "delete-appointment", methods: ['POST'])]
     public function deleteAppointment(Request $req, Connection $connection): JsonResponse
     {
+        date_default_timezone_set('Asia/Manila');
         try {
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointmentID'] ?? null;
@@ -47,7 +48,7 @@ class DeleteAppointmentAPI extends AbstractController
           
                       $connection->insert('appointment_log', [
                           'appointment_id' => $appointmentID,
-                          'actor_type' => 'patient',
+                          'actor_type' => 'PATIENT',
                           'action' => 'delete',
                           'message' => 'Deleted an appointment request.',
                           'snapshot' => json_encode($appointment ?: []),
