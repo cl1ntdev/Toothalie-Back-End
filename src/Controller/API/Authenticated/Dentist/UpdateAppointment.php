@@ -13,6 +13,7 @@ class UpdateAppointment extends AbstractController
     #[Route('/api/edit-appointment-dentist', name: "edit-appointment-dentist", methods: ['POST'])]
     public function getAppointment(Request $req, Connection $connection): JsonResponse
     {
+        date_default_timezone_set('Asia/Manila');
         try {
             $data = json_decode($req->getContent(), true);
             $appointmentID = $data['appointment_id'] ?? null;
@@ -25,7 +26,6 @@ class UpdateAppointment extends AbstractController
                 ], 400);
             }
 
-            // 🔹 Fetch current appointment snapshot before update
             $appointment = $connection->fetchAssociative(
                 'SELECT * FROM appointment WHERE appointment_id = ?',
                 [$appointmentID]
@@ -38,14 +38,12 @@ class UpdateAppointment extends AbstractController
                 ], 404);
             }
 
-            // 🔹 Update the appointment status
             $update = $connection->update(
                 'appointment',
                 ['status' => $status],
                 ['appointment_id' => $appointmentID]
             );
 
-            // 🔹 Insert a log entry
             $connection->insert('appointment_log', [
                 'appointment_id' => $appointmentID,
                 'logged_at' => (new \DateTime())->format('Y-m-d H:i:s'),
