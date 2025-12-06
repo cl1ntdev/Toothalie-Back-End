@@ -19,6 +19,9 @@ class Reminder
     #[ORM\Column]
     private array $Information = [];
 
+    #[ORM\Column(nullable: true)]
+    private ?bool $viewed = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +47,18 @@ class Reminder
     public function setInformation(array $Information): static
     {
         $this->Information = $Information;
+
+        return $this;
+    }
+
+    public function isViewed(): ?bool
+    {
+        return $this->viewed;
+    }
+
+    public function setViewed(?bool $viewed): static
+    {
+        $this->viewed = $viewed;
 
         return $this;
     }
