@@ -60,4 +60,95 @@ class Reminder extends AbstractController
         }
     }
 
+    #[Route('/api/get-reminder', name:'get-reminder', methods:['POST'])]
+    public function getReminder(Request $req, Connection $connection): JsonResponse
+    {
+        try {
+            $data = json_decode($req->getContent(), true);
+            $appointmentID = $data['appointmentID'] ?? null;
+    
+            if (!$appointmentID) {
+                return new JsonResponse([
+                    "status" => "error",
+                    "message" => "Missing appointmentID"
+                ], 400);
+            }
+    
+            $reminder = $connection->fetchAssociative(
+                "SELECT information FROM reminder WHERE appointment_id = ?",
+                [$appointmentID]
+            );
+    
+            if (!$reminder) {
+                return new JsonResponse([
+                    "status" => "success",
+                    "message" => "No reminder found",
+                    "data" => null
+                ]);
+            }
+    
+            return new JsonResponse([
+                "status" => "success",
+                "message" => "Reminder fetched successfully",
+                "data" => json_decode($reminder['information'], true)
+            ]);
+    
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+    #[Route('/api/update-reminder', name:'update-reminder', methods:['POST'])]
+    public function updateReminder(Request $req, Connection $connection): JsonResponse
+    {
+        try {
+            $data = json_decode($req->getContent(), true);
+            $appointmentID = $data['appointmentID'] ?? null;
+            $payload = $data['payload'] ?? null; // new schedule array
+    
+            if (!$appointmentID || !$payload) {
+                return new JsonResponse([
+                    "status" => "error",
+                    "message" => "Missing appointmentID or payload"
+                ], 400);
+            }
+    
+            $existing = $connection->fetchAssociative(
+                "SELECT * FROM reminder WHERE appointment_id = ?",
+                [$appointmentID]
+            );
+    
+            if ($existing) {
+                // Update existing
+                $connection->update('reminder', [
+                    'information' => json_encode($payload)
+                ], ['appointment_id' => $appointmentID]);
+    
+                return new JsonResponse([
+                    "status" => "success",
+                    "message" => "Reminder updated successfully"
+                ]);
+            } else {
+                // If no reminder exists, insert new
+                $connection->insert('reminder', [
+                    'appointment_id' => $appointmentID,
+                    'information' => json_encode($payload)
+                ]);
+    
+                return new JsonResponse([
+                    "status" => "success",
+                    "message" => "Reminder created successfully"
+                ]);
+            }
+    
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
