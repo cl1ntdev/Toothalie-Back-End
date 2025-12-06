@@ -51,6 +51,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: DentistService::class, mappedBy: 'User')]
     private Collection $dentistServices;
 
+    #[ORM\Column(nullable: true)]
+    private ?bool $disable = null;
+
     public function __construct()
     {
         $this->userRoles = new ArrayCollection();
@@ -207,6 +210,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $dentistService->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isDisable(): ?bool
+    {
+        return $this->disable;
+    }
+
+    public function setDisable(?bool $disable): static
+    {
+        $this->disable = $disable;
 
         return $this;
     }
