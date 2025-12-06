@@ -11,7 +11,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppUser extends AbstractController
 {
-    #[Route('/api/get-users', name: "get-users", methods: ['GET'])]
+    #[Route('/api/admin/get-users', name: "get-users", methods: ['GET'])]
     public function getUsers(Request $req, Connection $connection): JsonResponse
     {
        
@@ -31,7 +31,7 @@ class AppUser extends AbstractController
         }
     }
     
-    #[Route('/api/get-user', name: "get-user", methods: ['POST'])]
+    #[Route('/api/admin/get-user', name: "get-user", methods: ['POST'])]
     public function getOneUser(Request $req, Connection $connection): JsonResponse
     {
         try {
@@ -53,7 +53,7 @@ class AppUser extends AbstractController
         }
     }
     
-    #[Route('/api/delete-user', name: "delete-user", methods: ['POST'])]
+    #[Route('/api/admin/delete-user', name: "delete-user", methods: ['POST'])]
     public function deleteUserHard(Request $req, Connection $connection): JsonResponse
     {
         try {
@@ -99,7 +99,7 @@ class AppUser extends AbstractController
     }
 
     
-    #[Route('/api/update-user', name: "update-user", methods: ['POST'])]
+    #[Route('/api/admin/update-user', name: "update-user", methods: ['POST'])]
     public function updateUser(Request $req, Connection $connection, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         try {
@@ -149,7 +149,7 @@ class AppUser extends AbstractController
         }
     }
     
-    #[Route('/api/create-user', name: "create-user", methods: ['POST'])]
+    #[Route('/api/admin/create-user', name: "create-user", methods: ['POST'])]
     public function createUser(Request $req, Connection $connection, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         try {
