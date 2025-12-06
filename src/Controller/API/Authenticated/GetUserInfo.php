@@ -25,13 +25,19 @@ class GetUserInfo extends AbstractController
         $id = $user->getId();
 
         // Fetch roles
+        // $roles = $conn->fetchFirstColumn(
+        //     "SELECT r.role_name 
+        //      FROM role r
+        //      INNER JOIN user_role ur ON r.id = ur.role_id
+        //      WHERE ur.user_id = ?",
+        //     [$id]
+        // );
+        
         $roles = $conn->fetchFirstColumn(
-            "SELECT r.role_name 
-             FROM role r
-             INNER JOIN user_role ur ON r.id = ur.role_id
-             WHERE ur.user_id = ?",
+            "SELECT roles from user where id = ?",
             [$id]
         );
+
 
         return new JsonResponse([
             'status' => 'ok',
@@ -41,6 +47,7 @@ class GetUserInfo extends AbstractController
                 'firstName' => $user->getFirstName(),
                 'lastName' => $user->getLastName(),
                 'email' => $user->getEmail(),
+                'password' => $user->getPassword(),
                 'roles' => $roles
             ]
         ]);
