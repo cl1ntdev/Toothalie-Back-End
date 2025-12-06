@@ -25,9 +25,11 @@ class AppointmentDetails extends AbstractController
             $userID = $user->getId();
 
             $appointments = $connection->fetchAllAssociative(
-                "SELECT * FROM appointment 
-                 WHERE patient_id = ? AND deleted_on IS NULL 
-                 ORDER BY appointment_id DESC",
+                "SELECT a.*, r.id AS reminder_id, r.information AS reminder_info, r.viewed AS reminder_viewed
+                 FROM appointment a
+                 LEFT JOIN reminder r ON a.appointment_id = r.appointment_id
+                 WHERE a.patient_id = ? AND a.deleted_on IS NULL
+                 ORDER BY a.appointment_id DESC",
                 [$userID]
             );
 
