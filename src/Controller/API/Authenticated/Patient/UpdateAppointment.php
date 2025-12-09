@@ -83,7 +83,7 @@ class UpdateAppointment extends AbstractController
             // Log to activity log
             $logger->log(
                 'RECORD_UPDATED',
-                "Staff/Patient updated appointment ID {$appointmentID}"
+                "updated appointment ID {$appointmentID}"
             );
 
             return new JsonResponse([

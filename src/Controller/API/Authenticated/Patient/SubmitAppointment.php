@@ -102,7 +102,7 @@ class SubmitAppointment extends AbstractController
             // Log to activity log
             $logger->log(
                 'RECORD_CREATED',
-                "Staff/Patient created appointment ID {$appointmentID} (Dentist: {$dentistID})"
+                "created appointment ID {$appointmentID} (Dentist: {$dentistID})"
             );
             
             return new JsonResponse([
