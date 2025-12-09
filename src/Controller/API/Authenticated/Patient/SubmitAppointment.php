@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class SubmitAppointment extends AbstractController
 {
@@ -16,7 +17,7 @@ class SubmitAppointment extends AbstractController
     // 
     // >> >> >> << << << 
     #[Route('/api/add-appointment', name: "add-appointment", methods: ['POST'])]
-    public function addAppointment(Request $req, Connection $connection): JsonResponse
+    public function addAppointment(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         date_default_timezone_set('Asia/Manila');
         try {
@@ -98,6 +99,11 @@ class SubmitAppointment extends AbstractController
                            'logged_at' => (new \DateTime())->format('Y-m-d H:i:s')
             ]);
             
+            // Log to activity log
+            $logger->log(
+                'RECORD_CREATED',
+                "Staff/Patient created appointment ID {$appointmentID} (Dentist: {$dentistID})"
+            );
             
             return new JsonResponse([
                 'status' => 'ok',

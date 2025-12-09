@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Service\ActivityLogger;
 
 class AppUser extends AbstractController
 {
@@ -54,7 +55,7 @@ class AppUser extends AbstractController
     }
     
     #[Route('/api/admin/delete-user', name: "delete-user", methods: ['POST'])]
-    public function deleteUserHard(Request $req, Connection $connection): JsonResponse
+    public function deleteUserHard(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -83,6 +84,12 @@ class AppUser extends AbstractController
     
             // Hard delete
             $connection->delete('user', ['id' => $userID]);
+            
+            // Log the deletion
+            $logger->log(
+                'USER_DELETED',
+                "Admin deleted user ID {$userID} ({$user['username']})"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -100,7 +107,7 @@ class AppUser extends AbstractController
 
     
     #[Route('/api/admin/update-user', name: "update-user", methods: ['POST'])]
-    public function updateUser(Request $req, Connection $connection, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    public function updateUser(Request $req, Connection $connection, UserPasswordHasherInterface $passwordHasher, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -134,6 +141,12 @@ class AppUser extends AbstractController
     
             // Update database
             $connection->update('user', $updateData, ['id' => $userId]);
+            
+            // Log the update
+            $logger->log(
+                'USER_UPDATED',
+                "Admin updated user ID {$userId} (Fields: " . implode(', ', array_keys($updateData)) . ")"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -150,7 +163,7 @@ class AppUser extends AbstractController
     }
     
     #[Route('/api/admin/create-user', name: "create-user", methods: ['POST'])]
-    public function createUser(Request $req, Connection $connection, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    public function createUser(Request $req, Connection $connection, UserPasswordHasherInterface $passwordHasher, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -209,6 +222,12 @@ class AppUser extends AbstractController
     
             // Get new ID
             $newUserId = $connection->lastInsertId();
+            
+            // Log the creation
+            $logger->log(
+                'USER_CREATED',
+                "Admin created user ID {$newUserId} ({$data['username']})"
+            );
     
             return new JsonResponse([
                 'status' => 'success',

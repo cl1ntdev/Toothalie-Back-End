@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class UpdateAppointment extends AbstractController
 {
@@ -16,7 +17,7 @@ class UpdateAppointment extends AbstractController
     // 
     // >> >> >> << << << 
     #[Route('/api/update-appointment', name: "update-appointment", methods: ['POST'])]
-    public function updateAppointment(Request $req, Connection $connection): JsonResponse
+    public function updateAppointment(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -78,6 +79,12 @@ class UpdateAppointment extends AbstractController
                            ]),
                            'logged_at' => (new \DateTime())->format('Y-m-d H:i:s')
                        ]);
+                       
+            // Log to activity log
+            $logger->log(
+                'RECORD_UPDATED',
+                "Staff/Patient updated appointment ID {$appointmentID}"
+            );
 
             return new JsonResponse([
                 'status' => 'ok',

@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class Appointment extends AbstractController
 {
@@ -136,6 +137,7 @@ class Appointment extends AbstractController
     public function createAppointment(
         Request $req,
         Connection $connection,
+        ActivityLogger $logger,
     ): JsonResponse {
         try {
             $data = json_decode($req->getContent(), true);
@@ -182,6 +184,12 @@ class Appointment extends AbstractController
                 array_filter($insertData, fn($v) => $v !== null),
             );
             $newId = $connection->lastInsertId();
+            
+            // Log the creation
+            $logger->log(
+                'RECORD_CREATED',
+                "Admin created appointment ID {$newId} (Patient: {$insertData['patient_id']}, Dentist: {$insertData['dentist_id']})"
+            );
 
             return new JsonResponse([
                 "status" => "success",
@@ -208,6 +216,7 @@ class Appointment extends AbstractController
         string $id,
         Request $req,
         Connection $connection,
+        ActivityLogger $logger,
     ): JsonResponse {
         try {
                 $data = json_decode($req->getContent(), true);
@@ -243,6 +252,12 @@ class Appointment extends AbstractController
                 }
         
                 $connection->update("appointment", $updateData, ["appointment_id" => $appointmentID]);
+                
+                // Log the update
+                $logger->log(
+                    'RECORD_UPDATED',
+                    "Admin updated appointment ID {$appointmentID} (Fields: " . implode(', ', array_keys($updateData)) . ")"
+                );
         
                 return new JsonResponse([
                     "status" => "success",
@@ -267,6 +282,7 @@ class Appointment extends AbstractController
     public function deleteAppointment(
         int $id,
         Connection $connection,
+        ActivityLogger $logger,
     ): JsonResponse {
         try {
             $appointment = $connection->fetchAssociative(
@@ -281,6 +297,13 @@ class Appointment extends AbstractController
             }
 
             $connection->delete("appointment", ["appointment_id" => $id]);
+            
+            // Log the deletion
+            $logger->log(
+                'RECORD_DELETED',
+                "Admin deleted appointment ID {$id}"
+            );
+            
             return new JsonResponse([
                 "status" => "success",
                 "message" => "Appointment deleted",
