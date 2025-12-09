@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class EditSettings extends AbstractController
 {
@@ -17,7 +18,7 @@ class EditSettings extends AbstractController
             methods: ["POST"],
         ),
     ]
-    public function Edit(Request $req, Connection $conn): JsonResponse
+    public function Edit(Request $req, Connection $conn, ActivityLogger $logger): JsonResponse
     {
         $conn->beginTransaction();
         try {
@@ -160,6 +161,20 @@ class EditSettings extends AbstractController
 
             $conn->commit();
 
+            // Log Success
+            $logger->log(
+                'SCHEDULE_UPDATED',
+                "Dentist schedule updated for User ID {$dentistID}",
+                null,
+                [
+                    'actor_type' => 'DENTIST',
+                    'dentist_id' => $dentistID,
+                    'processed_ids' => array_values($processedIDs),
+                    'deleted_ids' => array_values($deletedIDs),
+                    'skipped_ids' => array_values($notDeletedIDs)
+                ]
+            );
+
             return new JsonResponse([
                 "status" => "ok",
                 "message" => "Dentist schedule updated successfully",
@@ -174,6 +189,15 @@ class EditSettings extends AbstractController
             if ($conn->isTransactionActive()) {
                 $conn->rollBack();
             }
+
+            // Log Error
+            $logger->log(
+                'ERROR',
+                "Failed to update dentist schedule: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'DENTIST']
+            );
+
             return new JsonResponse(
                 [
                     "status" => "error",
@@ -183,41 +207,41 @@ class EditSettings extends AbstractController
             );
         }
     }
-    
+
     #[Route('/api/edit-services', name: '/api/edit-services', methods: ['POST'])]
-    public function editServices(Request $request, Connection $connection): JsonResponse
+    public function editServices(Request $request, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         $user = $this->getUser();
         $userID = $user->getId();
         $data = json_decode($request->getContent(), true);
-    
+
         if (!$data || !isset($data['payload'])) {
             return new JsonResponse(['error' => 'Invalid request'], 400);
         }
-    
+
         $payload = $data['payload'];
-    
+
         try {
             $connection->beginTransaction();
-    
+
             // Fetch CURRENT dentist services from DB
             $existing = $connection->fetchFirstColumn(
                 "SELECT service_id FROM dentist_service WHERE user_id = ?",
                 [$userID]
             );
-    
+
             $existing = array_map('intval', $existing);
-    
+
             // Extract NEW service IDs from payload
             $newServiceIds = array_map(fn ($item) => (int)$item['service_id'], $payload);
-    
+
             // Remove duplicates just in case
             $newServiceIds = array_unique($newServiceIds);
-    
+
             // Determine INSERTS & DELETES
             $toInsert = array_diff($newServiceIds, $existing);
             $toDelete = array_diff($existing, $newServiceIds);
-    
+
             //  Perform INSERTS
             foreach ($toInsert as $serviceID) {
                 $connection->insert('dentist_service', [
@@ -225,7 +249,7 @@ class EditSettings extends AbstractController
                     'service_id' => $serviceID
                 ]);
             }
-    
+
             //  Perform DELETES
             foreach ($toDelete as $serviceID) {
                 $connection->delete('dentist_service', [
@@ -233,24 +257,48 @@ class EditSettings extends AbstractController
                     'service_id' => $serviceID
                 ]);
             }
-    
+
             // Commit changes
             $connection->commit();
-    
+
+            // Log Success
+            $logger->log(
+                'SERVICES_UPDATED',
+                "Dentist services updated for User ID {$userID}",
+                null,
+                [
+                    'actor_type' => 'DENTIST',
+                    'user_id' => $userID,
+                    'added_services' => array_values($toInsert),
+                    'removed_services' => array_values($toDelete),
+                    'final_service_list' => $newServiceIds
+                ]
+            );
+
             return new JsonResponse([
                 'status' => 'success',
                 'added' => array_values($toInsert),
                 'removed' => array_values($toDelete),
                 'finalServices' => $newServiceIds
             ]);
-    
+
         } catch (\Throwable $e) {
-            $connection->rollBack();
+            if ($connection->isTransactionActive()) {
+                $connection->rollBack();
+            }
+
+            // Log Error
+            $logger->log(
+                'ERROR',
+                "Failed to update dentist services: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'DENTIST']
+            );
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
-
 }
