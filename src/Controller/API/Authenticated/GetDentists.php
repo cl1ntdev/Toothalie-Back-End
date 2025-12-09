@@ -14,13 +14,19 @@ class GetDentists extends AbstractController {
     {
         try {
             //Fetch all users with the DENTIST role via user_role join
+            // $dentists = $connection->fetchAllAssociative(
+            //     "SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.roles
+            //      FROM user u
+            //      JOIN user_role ur ON ur.user_id = u.id
+            //      JOIN role r ON r.id = ur.role_id
+            //      WHERE r.role_name = 'DENTIST'"
+            // );
             $dentists = $connection->fetchAllAssociative(
-                "SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.roles
-                 FROM user u
-                 JOIN user_role ur ON ur.user_id = u.id
-                 JOIN role r ON r.id = ur.role_id
-                 WHERE r.role_name = 'DENTIST'"
+                "SELECT id, username, first_name, last_name, email, roles
+                 FROM user
+                 WHERE JSON_CONTAINS(roles, '\"ROLE_DENTIST\"')"
             );
+
 
             //Attach schedules for each dentist
             foreach ($dentists as &$dentist) {
