@@ -37,6 +37,10 @@ security:
             stateless: true
             provider: app_user_provider
             jwt: ~
+            logout:
+                path: /api/logout  # This must match your route
+                # target: null       # Prevents redirect behavior
+                # success_handler: null # Optional: relies on default 200 OK or custom handler
 
         main:
             lazy: true

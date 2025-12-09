@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class DentistService extends AbstractController
 {
@@ -66,7 +67,7 @@ class DentistService extends AbstractController
     }
     
     #[Route('/api/admin/delete-dentist-service', name: "delete-dentist-service", methods: ['POST'])]
-    public function deleteDentistService(Request $req, Connection $connection): JsonResponse
+    public function deleteDentistService(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -80,7 +81,6 @@ class DentistService extends AbstractController
     
             $dentistServiceID = $data['dentistServiceID'];
     
-            // Check dentist service exists
             $dentistService = $connection->fetchAssociative(
                 "SELECT * FROM dentist_service WHERE id = ?",
                 [$dentistServiceID]
@@ -93,8 +93,13 @@ class DentistService extends AbstractController
                 ], 404);
             }
     
-            // Hard delete
             $connection->delete('dentist_service', ['id' => $dentistServiceID]);
+
+            // Log deletion
+            $logger->log(
+                'DENTIST_SERVICE_DELETED',
+                "Admin deleted dentist service ID {$dentistServiceID} (User ID: {$dentistService['user_id']}, Service ID: {$dentistService['service_id']})"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -109,10 +114,9 @@ class DentistService extends AbstractController
             ], 500);
         }
     }
-
     
     #[Route('/api/admin/update-dentist-service', name: "update-dentist-service", methods: ['POST'])]
-    public function updateDentistService(Request $req, Connection $connection): JsonResponse
+    public function updateDentistService(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -126,17 +130,20 @@ class DentistService extends AbstractController
     
             $dentistServiceID = $data['dentistServiceID'];
     
-            // Prepare update data
             $updateData = [
-                'user_id'  => $data['user_id'] ?? null,
-                'service_id'      => $data['service_id'] ?? null,
+                'user_id'    => $data['user_id'] ?? null,
+                'service_id' => $data['service_id'] ?? null,
             ];
     
-            // Remove NULL values so fields remain unchanged
             $updateData = array_filter($updateData, fn($v) => $v !== null);
     
-            // Update database
             $connection->update('dentist_service', $updateData, ['id' => $dentistServiceID]);
+
+            // Log update
+            $logger->log(
+                'DENTIST_SERVICE_UPDATED',
+                "Admin updated dentist service ID {$dentistServiceID} (Fields: " . implode(', ', array_keys($updateData)) . ")"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -153,12 +160,11 @@ class DentistService extends AbstractController
     }
     
     #[Route('/api/admin/create-dentist-service', name: "create-dentist-service", methods: ['POST'])]
-    public function createDentistService(Request $req, Connection $connection): JsonResponse
+    public function createDentistService(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
     
-            // Validate required fields
             $required = ['user_id', 'service_id']; 
             foreach ($required as $field) {
                 if (empty($data[$field]) && $data[$field] !== 0 && $data[$field] !== '0') {
@@ -172,7 +178,6 @@ class DentistService extends AbstractController
             $userId = $data['user_id'];
             $serviceId = $data['service_id'];
     
-            // Check if user exists
             $userExists = $connection->fetchOne('SELECT id FROM user WHERE id = ?', [$userId]);
             if (!$userExists) {
                 return new JsonResponse([
@@ -181,7 +186,6 @@ class DentistService extends AbstractController
                 ], 400);
             }
     
-            // Check if service exists
             $serviceExists = $connection->fetchOne('SELECT id FROM service WHERE id = ?', [$serviceId]);
             if (!$serviceExists) {
                 return new JsonResponse([
@@ -190,17 +194,20 @@ class DentistService extends AbstractController
                 ], 400);
             }
     
-            // Prepare insert data
             $insertData = [
                 'user_id' => $userId,
                 'service_id' => $serviceId,
             ];
     
-            // Insert into database
             $connection->insert('dentist_service', $insertData);
     
-            // Get new ID
             $newDentistServiceId = $connection->lastInsertId();
+
+            // Log creation
+            $logger->log(
+                'DENTIST_SERVICE_CREATED',
+                "Admin created dentist service ID {$newDentistServiceId} (User ID: {$userId}, Service ID: {$serviceId})"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -216,5 +223,4 @@ class DentistService extends AbstractController
             ], 500);
         }
     }
-
 }

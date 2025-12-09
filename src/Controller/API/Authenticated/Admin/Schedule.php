@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class Schedule extends AbstractController
 {
@@ -60,7 +61,7 @@ class Schedule extends AbstractController
     }
     
     #[Route('/api/admin/delete-schedule', name: "delete-schedule", methods: ['POST'])]
-    public function deleteSchedule(Request $req, Connection $connection): JsonResponse
+    public function deleteSchedule(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -74,7 +75,6 @@ class Schedule extends AbstractController
     
             $scheduleID = $data['scheduleID'];
     
-            // Check schedule exists
             $schedule = $connection->fetchAssociative(
                 "SELECT * FROM schedule WHERE scheduleID = ?",
                 [$scheduleID]
@@ -87,8 +87,13 @@ class Schedule extends AbstractController
                 ], 404);
             }
     
-            // Hard delete
             $connection->delete('schedule', ['scheduleID' => $scheduleID]);
+
+            // Log deletion
+            $logger->log(
+                'SCHEDULE_DELETED',
+                "Admin deleted schedule ID {$scheduleID} (Dentist ID: {$schedule['dentistID']}, Day: {$schedule['day_of_week']}, Time: {$schedule['time_slot']})"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -106,7 +111,7 @@ class Schedule extends AbstractController
 
     
     #[Route('/api/admin/update-schedule', name: "update-schedule", methods: ['POST'])]
-    public function updateSchedule(Request $req, Connection $connection): JsonResponse
+    public function updateSchedule(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -120,18 +125,21 @@ class Schedule extends AbstractController
     
             $scheduleID = $data['scheduleID'];
     
-            // Prepare update data
             $updateData = [
-                'day_of_week'  => $data['day_of_week'] ?? null,
-                'time_slot'      => $data['time_slot'] ?? null,
+                'day_of_week' => $data['day_of_week'] ?? null,
+                'time_slot'   => $data['time_slot'] ?? null,
                 'dentistID'   => $data['dentistID'] ?? null,
             ];
     
-            // Remove NULL values so fields remain unchanged
             $updateData = array_filter($updateData, fn($v) => $v !== null);
     
-            // Update database
             $connection->update('schedule', $updateData, ['scheduleID' => $scheduleID]);
+
+            // Log update
+            $logger->log(
+                'SCHEDULE_UPDATED',
+                "Admin updated schedule ID {$scheduleID} (Fields: " . implode(', ', array_keys($updateData)) . ")"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -148,12 +156,11 @@ class Schedule extends AbstractController
     }
     
     #[Route('/api/admin/create-schedule', name: "create-schedule", methods: ['POST'])]
-    public function createSchedule(Request $req, Connection $connection): JsonResponse
+    public function createSchedule(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
     
-            // Validate required fields
             $required = ['day_of_week', 'time_slot', 'dentistID']; 
             foreach ($required as $field) {
                 if (empty($data[$field]) && $data[$field] !== 0 && $data[$field] !== '0') {
@@ -164,18 +171,21 @@ class Schedule extends AbstractController
                 }
             }
             
-            // Prepare insert data
             $insertData = [
-                'day_of_week'  => $data['day_of_week'],
-                'time_slot'      => $data['time_slot'],
+                'day_of_week' => $data['day_of_week'],
+                'time_slot'   => $data['time_slot'],
                 'dentistID'   => $data['dentistID'],
             ];
     
-            // Insert into database
             $connection->insert('schedule', $insertData);
     
-            // Get new ID
             $newScheduleId = $connection->lastInsertId();
+
+            // Log creation
+            $logger->log(
+                'SCHEDULE_CREATED',
+                "Admin created schedule ID {$newScheduleId} (Dentist ID: {$data['dentistID']}, Day: {$data['day_of_week']}, Time: {$data['time_slot']})"
+            );
     
             return new JsonResponse([
                 'status' => 'success',
