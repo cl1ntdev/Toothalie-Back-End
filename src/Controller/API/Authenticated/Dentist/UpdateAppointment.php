@@ -7,11 +7,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class UpdateAppointment extends AbstractController
 {
     #[Route('/api/edit-appointment-dentist', name: "edit-appointment-dentist", methods: ['POST'])]
-    public function getAppointment(Request $req, Connection $connection): JsonResponse
+    public function getAppointment(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         date_default_timezone_set('Asia/Manila');
         try {
@@ -38,25 +39,24 @@ class UpdateAppointment extends AbstractController
                 ], 404);
             }
 
-            $update = $connection->update(
+            $connection->update(
                 'appointment',
                 ['status' => $status],
                 ['appointment_id' => $appointmentID]
             );
 
-            $connection->insert('appointment_log', [
-                'appointment_id' => $appointmentID,
-                'logged_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-                'actor_type' => 'DENTIST',
-                'action' => 'Status Updated',
-                'message' => "Status changed from '{$appointment['status']}' to '{$status}'",
-                'snapshot' => json_encode($appointment),
-            ]);
+            // Log via ActivityLogger
+            $user = $this->getUser();
+            $logger->log(
+                'RECORD_UPDATED',
+                "Dentist updated appointment ID {$appointmentID} status from '{$appointment['status']}' to '{$status}'",
+                $user,
+                ['appointment_snapshot' => (object)$appointment]
+            );
 
             return new JsonResponse([
-                'status' => 'ok',
-                'update_status' => $update,
-                'message' => 'Appointment updated and logged successfully'
+                'status' => 'success',
+                'message' => 'Appointment updated successfully'
             ]);
 
         } catch (\Exception $e) {
