@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
+use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ChangePass extends AbstractController 
@@ -16,7 +17,8 @@ class ChangePass extends AbstractController
     public function changePass(
         Request $req,
         EntityManagerInterface $em,
-        UserPasswordHasherInterface $hasher
+        UserPasswordHasherInterface $hasher,
+        ActivityLogger $logger
     ): JsonResponse {
         $data = json_decode($req->getContent(), true);
 
@@ -47,7 +49,10 @@ class ChangePass extends AbstractController
                 'message' => 'New passwords do not match'
             ], 400);
         }
-
+        $logger->log(
+            'PASSWORD_UPDATED',
+            "updated password of {$user->getUsername()}"
+        );
         $hashed = $hasher->hashPassword($user, $newPassword);
         $user->setPassword($hashed);
 
