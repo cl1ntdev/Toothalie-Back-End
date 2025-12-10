@@ -7,11 +7,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
+use App\Service\ActivityLogger;
 
 class Reminder extends AbstractController
 {
-    #[Route('/api/admin/get-reminders', name: "get-reminders", methods: ['GET'])]
-    public function getReminders(Connection $connection): JsonResponse
+    #[Route('/api/admin/get-reminders', name: "get-admin-reminders", methods: ['GET'])]
+    public function getReminders(Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $reminders = $connection->fetchAllAssociative(
@@ -22,6 +23,13 @@ class Reminder extends AbstractController
                 'reminders' => $reminders
             ]);
         } catch (\Exception $e) {
+            $logger->log(
+                'ERROR',
+                "Admin failed to fetch reminders: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'ADMIN']
+            );
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -29,13 +37,17 @@ class Reminder extends AbstractController
         }
     }
     
-    #[Route('/api/admin/get-reminder', name: "get-reminder", methods: ['POST'])]
-    public function getOneReminder(Request $req, Connection $connection): JsonResponse
+    #[Route('/api/admin/get-reminder', name: "get-admin-reminder", methods: ['POST'])]
+    public function getOneReminder(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
-            $reminderID = $data['reminderID'];
+            $reminderID = $data['reminderID'] ?? null;
             
+            if (!$reminderID) {
+                return new JsonResponse(['status' => 'error', 'message' => 'Missing reminderID'], 400);
+            }
+
             $reminder = $connection->fetchAssociative(
                 'SELECT * from reminder where id = ?',
                 [$reminderID]
@@ -45,6 +57,13 @@ class Reminder extends AbstractController
                 'reminder' => $reminder
             ]);
         } catch (\Exception $e) {
+            $logger->log(
+                'ERROR',
+                "Admin failed to fetch single reminder: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'ADMIN']
+            );
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -52,8 +71,8 @@ class Reminder extends AbstractController
         }
     }
     
-    #[Route('/api/admin/delete-reminder', name: "delete-reminder", methods: ['POST'])]
-    public function deleteReminder(Request $req, Connection $connection): JsonResponse
+    #[Route('/api/admin/delete-reminder', name: "delete-admin-reminder", methods: ['POST'])]
+    public function deleteReminder(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -82,6 +101,18 @@ class Reminder extends AbstractController
     
             // Hard delete
             $connection->delete('reminder', ['id' => $reminderID]);
+
+            // Log Success
+            $logger->log(
+                'REMINDER_DELETED',
+                "Admin deleted reminder ID {$reminderID}",
+                null,
+                [
+                    'actor_type' => 'ADMIN',
+                    'reminder_id' => $reminderID,
+                    'snapshot' => $reminder // Keep a copy of what was deleted
+                ]
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -90,6 +121,13 @@ class Reminder extends AbstractController
             ]);
     
         } catch (\Exception $e) {
+            $logger->log(
+                'ERROR',
+                "Admin failed to delete reminder: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'ADMIN']
+            );
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -98,8 +136,8 @@ class Reminder extends AbstractController
     }
 
     
-    #[Route('/api/admin/update-reminder', name: "update-reminder", methods: ['POST'])]
-    public function updateReminder(Request $req, Connection $connection): JsonResponse
+    #[Route('/api/admin/update-reminder', name: "update-admin-reminder", methods: ['POST'])]
+    public function updateReminder(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -116,7 +154,7 @@ class Reminder extends AbstractController
             // Prepare update data
             $updateData = [
                 'information'  => isset($data['information']) ? json_encode($data['information']) : null,
-                'appointment_id'      => $data['appointment_id'] ?? null,
+                'appointment_id'       => $data['appointment_id'] ?? null,
                 'viewed'   => $data['viewed'] ?? null,
             ];
     
@@ -125,6 +163,18 @@ class Reminder extends AbstractController
     
             // Update database
             $connection->update('reminder', $updateData, ['id' => $reminderID]);
+
+            // Log Success
+            $logger->log(
+                'REMINDER_UPDATED',
+                "Admin updated reminder ID {$reminderID}",
+                null,
+                [
+                    'actor_type' => 'ADMIN',
+                    'reminder_id' => $reminderID,
+                    'changes' => $updateData
+                ]
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -133,6 +183,13 @@ class Reminder extends AbstractController
             ], 200);
     
         } catch (\Exception $e) {
+            $logger->log(
+                'ERROR',
+                "Admin failed to update reminder: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'ADMIN']
+            );
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -140,8 +197,8 @@ class Reminder extends AbstractController
         }
     }
     
-    #[Route('/api/admin/create-reminder', name: "create-reminder", methods: ['POST'])]
-    public function createReminder(Request $req, Connection $connection): JsonResponse
+    #[Route('/api/admin/create-reminder', name: "create-admin-reminder", methods: ['POST'])]
+    public function createReminder(Request $req, Connection $connection, ActivityLogger $logger): JsonResponse
     {
         try {
             $data = json_decode($req->getContent(), true);
@@ -160,7 +217,7 @@ class Reminder extends AbstractController
             // Prepare insert data
             $insertData = [
                 'information'  => json_encode($data['information']),
-                'appointment_id'      => $data['appointment_id'] ?? null,
+                'appointment_id'       => $data['appointment_id'] ?? null,
                 'viewed'   => $data['viewed'] ?? 0, // Default to 0 if not provided
             ];
     
@@ -169,6 +226,18 @@ class Reminder extends AbstractController
     
             // Get new ID
             $newReminderId = $connection->lastInsertId();
+
+            // Log Success
+            $logger->log(
+                'REMINDER_CREATED',
+                "Admin created new reminder ID {$newReminderId}",
+                null,
+                [
+                    'actor_type' => 'ADMIN',
+                    'reminder_id' => $newReminderId,
+                    'snapshot' => $insertData
+                ]
+            );
     
             return new JsonResponse([
                 'status' => 'success',
@@ -178,6 +247,13 @@ class Reminder extends AbstractController
             ]);
     
         } catch (\Exception $e) {
+            $logger->log(
+                'ERROR',
+                "Admin failed to create reminder: " . $e->getMessage(),
+                null,
+                ['actor_type' => 'ADMIN']
+            );
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
