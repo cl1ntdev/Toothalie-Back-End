@@ -1,7 +1,8 @@
 nelmio_cors:
     defaults:
-        origin_regex: true # to allow all origin change this false 
-        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%'] # change this to *         allow_origin: ['*']
+        origin_regex: false # to allow all origin change this false 
+        allow_origin: ['*']
+        # allow_origin: ['%env(CORS_ALLOW_ORIGIN)%'] # change this to *         allow_origin: ['*']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization']
         expose_headers: ['Link']
